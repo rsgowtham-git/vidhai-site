@@ -1004,7 +1004,7 @@
         <div class="admin-field">
           <label for="editor-content">Content</label>
           <div id="editor-content-quill"></div>
-          <textarea id="editor-content" class="admin-textarea" rows="10" placeholder="Write your post here..." required style="display:none"></textarea>
+          <textarea id="editor-content" class="admin-textarea" rows="10" placeholder="Write your post here..." style="display:none"></textarea>
         </div>
         <div class="admin-editor-actions">
           <button type="submit" class="admin-btn admin-btn--primary">Save Post</button>
@@ -1023,7 +1023,12 @@
       <p class="newsletter__desc">Get a curated AI and industry news summary delivered to your inbox. Free, no spam — just knowledge sharing.</p>
     </div>
     <form class="newsletter__form" id="newsletter-form">
-      <input type="email" class="newsletter__input" id="newsletter-email" placeholder="your@email.com" required aria-label="Email address">
+      <input type="email" class="newsletter__input" id="newsletter-email" name="email" placeholder="your@email.com" required aria-label="Email address">
+      <input type="hidden" name="_subject" value="New Vidhai Newsletter Subscriber!">
+      <input type="hidden" name="_autoresponse" value="Welcome to Vidhai! Thank you for subscribing to our newsletter. You will receive curated AI and semiconductor industry insights directly in your inbox. We are glad to have you on board. — Team Vidhai (vidhai.co)">
+      <input type="hidden" name="_template" value="table">
+      <input type="hidden" name="_captcha" value="false">
+      <input type="checkbox" name="_honey" style="display:none">
       <div class="newsletter__freq">
         <label class="newsletter__radio">
           <input type="radio" name="frequency" value="weekly" checked>
@@ -1034,9 +1039,10 @@
           <span>Monthly</span>
         </label>
       </div>
-      <button type="submit" class="newsletter__btn">Subscribe</button>
+      <button type="submit" class="newsletter__btn" id="newsletter-btn">Subscribe</button>
     </form>
-    <p class="newsletter__success" id="newsletter-success" style="display:none">Thanks for subscribing. You’ll hear from us soon.</p>
+    <p class="newsletter__success" id="newsletter-success" style="display:none">Thanks for subscribing! Check your inbox for a welcome message.</p>
+    <p class="newsletter__error" id="newsletter-error" style="display:none">Something went wrong. Please try again.</p>
   </div>
 </section>
 

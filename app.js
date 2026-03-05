@@ -446,18 +446,69 @@
   });
 
   // ========================================
-  // NEWSLETTER FORM
+  // NEWSLETTER FORM (FormSubmit.co)
   // ========================================
   var newsletterForm = document.getElementById('newsletter-form');
   if (newsletterForm) {
     newsletterForm.addEventListener('submit', function(e) {
       e.preventDefault();
-      var email = document.getElementById('newsletter-email').value;
-      var freq = newsletterForm.querySelector('input[name="frequency"]:checked').value;
-      // In production, this would POST to a backend
-      console.log('Newsletter signup:', email, freq);
-      newsletterForm.style.display = 'none';
-      document.getElementById('newsletter-success').style.display = 'block';
+      var emailInput = document.getElementById('newsletter-email');
+      var email = emailInput.value.trim();
+      if (!email) return;
+
+      var freq = newsletterForm.querySelector('input[name="frequency"]:checked');
+      var frequency = freq ? freq.value : 'weekly';
+
+      var btn = document.getElementById('newsletter-btn');
+      var successEl = document.getElementById('newsletter-success');
+      var errorEl = document.getElementById('newsletter-error');
+
+      // Disable button during submission
+      if (btn) {
+        btn.disabled = true;
+        btn.textContent = 'Subscribing...';
+      }
+
+      // Hide previous messages
+      if (successEl) successEl.style.display = 'none';
+      if (errorEl) errorEl.style.display = 'none';
+
+      // Build form data
+      var formData = new FormData();
+      formData.append('email', email);
+      formData.append('frequency', frequency);
+      formData.append('_subject', 'New Vidhai Newsletter Subscriber!');
+      formData.append('_autoresponse', 'Welcome to Vidhai! Thank you for subscribing to our newsletter. You will receive curated AI and semiconductor industry insights directly in your inbox. We are glad to have you on board. \u2014 Team Vidhai (vidhai.co)');
+      formData.append('_template', 'table');
+      formData.append('_captcha', 'false');
+
+      // Send via AJAX to FormSubmit.co
+      fetch('https://formsubmit.co/ajax/rsgowtham@gmail.com', {
+        method: 'POST',
+        body: formData
+      })
+      .then(function(response) {
+        return response.json();
+      })
+      .then(function(data) {
+        if (data.success === 'true' || data.success === true) {
+          newsletterForm.style.display = 'none';
+          if (successEl) successEl.style.display = 'block';
+        } else {
+          if (errorEl) errorEl.style.display = 'block';
+          if (btn) {
+            btn.disabled = false;
+            btn.textContent = 'Subscribe';
+          }
+        }
+      })
+      .catch(function() {
+        if (errorEl) errorEl.style.display = 'block';
+        if (btn) {
+          btn.disabled = false;
+          btn.textContent = 'Subscribe';
+        }
+      });
     });
   }
 
@@ -603,6 +654,69 @@
     });
   }
 
+  // --- Format Painter ---
+  var formatPainterFormats = null;
+  var formatPainterActive = false;
+
+  function activateFormatPainter() {
+    if (!quillEditor) return;
+    var range = quillEditor.getSelection();
+    if (!range || range.length === 0) {
+      alert('Select some text first to copy its formatting.');
+      return;
+    }
+    // Capture formats at selection
+    formatPainterFormats = quillEditor.getFormat(range);
+    formatPainterActive = true;
+    // Visual feedback on the button
+    var fpBtn = document.querySelector('.ql-format-painter');
+    if (fpBtn) fpBtn.classList.add('ql-active');
+  }
+
+  function applyFormatPainter(range) {
+    if (!quillEditor || !formatPainterFormats || !range || range.length === 0) return;
+    // Clear existing formats first
+    quillEditor.removeFormat(range.index, range.length);
+    // Apply captured formats
+    Object.keys(formatPainterFormats).forEach(function(fmt) {
+      quillEditor.formatText(range.index, range.length, fmt, formatPainterFormats[fmt]);
+    });
+    // Deactivate
+    formatPainterActive = false;
+    formatPainterFormats = null;
+    var fpBtn = document.querySelector('.ql-format-painter');
+    if (fpBtn) fpBtn.classList.remove('ql-active');
+  }
+
+  // --- Insert Table ---
+  function insertTable() {
+    if (!quillEditor) return;
+    var rows = prompt('Number of rows:', '3');
+    var cols = prompt('Number of columns:', '3');
+    if (!rows || !cols) return;
+    rows = parseInt(rows, 10);
+    cols = parseInt(cols, 10);
+    if (isNaN(rows) || isNaN(cols) || rows < 1 || cols < 1 || rows > 20 || cols > 10) {
+      alert('Please enter valid numbers (rows: 1-20, columns: 1-10).');
+      return;
+    }
+    var tableHTML = '<table><thead><tr>';
+    for (var c = 0; c < cols; c++) {
+      tableHTML += '<th>Header ' + (c + 1) + '</th>';
+    }
+    tableHTML += '</tr></thead><tbody>';
+    for (var r = 0; r < rows; r++) {
+      tableHTML += '<tr>';
+      for (var c2 = 0; c2 < cols; c2++) {
+        tableHTML += '<td>&nbsp;</td>';
+      }
+      tableHTML += '</tr>';
+    }
+    tableHTML += '</tbody></table><p><br></p>';
+    var range = quillEditor.getSelection(true);
+    quillEditor.clipboard.dangerouslyPasteHTML(range.index, tableHTML);
+  }
+
   // --- Quill Init ---
   function initQuill() {
     var editorContainer = document.getElementById('editor-content-quill');
@@ -612,20 +726,59 @@
       quillEditor = null;
       editorContainer.innerHTML = '';
     }
+
+    // Register table module if quill-better-table is available
+    var toolbarOptions = [
+      [{ 'header': [1, 2, 3, false] }],
+      [{ 'size': ['small', false, 'large', 'huge'] }],
+      ['bold', 'italic', 'underline', 'strike'],
+      [{ 'color': [] }, { 'background': [] }],
+      [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+      [{ 'indent': '-1' }, { 'indent': '+1' }],
+      [{ 'align': [] }],
+      ['blockquote', 'code-block'],
+      ['link', 'image'],
+      ['insert-table'],
+      ['format-painter'],
+      ['clean']
+    ];
+
     quillEditor = new Quill('#editor-content-quill', {
       theme: 'snow',
       placeholder: 'Write your post here...',
       modules: {
-        toolbar: [
-          [{ 'header': [1, 2, 3, false] }],
-          [{ 'size': ['small', false, 'large', 'huge'] }],
-          ['bold', 'italic', 'underline', 'strike'],
-          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
-          ['blockquote', 'code-block'],
-          [{ 'background': [] }],
-          ['link'],
-          ['clean']
-        ]
+        toolbar: {
+          container: toolbarOptions,
+          handlers: {
+            'format-painter': function() {
+              activateFormatPainter();
+            },
+            'insert-table': function() {
+              insertTable();
+            }
+          }
+        }
+      }
+    });
+
+    // Style the format painter button with paintbrush icon
+    var fpBtn = document.querySelector('.ql-format-painter');
+    if (fpBtn) {
+      fpBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 3H5c-1.1 0-2 .9-2 2v4h18V5c0-1.1-.9-2-2-2z"/><path d="M3 9v3c0 1.1.9 2 2 2h4l-2 7h4l2-7h6c1.1 0 2-.9 2-2V9H3z"/></svg>';
+      fpBtn.title = 'Format Painter — select formatted text, click this, then select target text';
+    }
+
+    // Style the table insert button
+    var tblBtn = document.querySelector('.ql-insert-table');
+    if (tblBtn) {
+      tblBtn.innerHTML = '<svg viewBox="0 0 24 24" width="18" height="18" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="3" y="3" width="18" height="18" rx="2"/><line x1="3" y1="9" x2="21" y2="9"/><line x1="3" y1="15" x2="21" y2="15"/><line x1="9" y1="3" x2="9" y2="21"/><line x1="15" y1="3" x2="15" y2="21"/></svg>';
+      tblBtn.title = 'Insert Table';
+    }
+
+    // Listen for selection changes to apply format painter
+    quillEditor.on('selection-change', function(range) {
+      if (formatPainterActive && range && range.length > 0) {
+        applyFormatPainter(range);
       }
     });
   }
@@ -745,11 +898,18 @@
       savePosts(posts);
       refreshAllViews();
       renderAdminPostList();
-      showAdminView('list');
+
+      // Determine saved post index for LinkedIn
+      var savedPostIndex = (currentEditIndex >= 0) ? currentEditIndex : 0;
       currentEditIndex = -1;
 
-      // Show persistence note
-      alert('Post saved!\n\nNote: To make this permanent, tell your AI assistant to update the site.');
+      // After save, prompt for LinkedIn
+      var doLinkedIn = confirm('Post saved!\n\nWould you like to post this to LinkedIn?\n\n(To make this blog post permanent, tell your AI assistant to update the site.)');
+      if (doLinkedIn) {
+        openLinkedInView(savedPostIndex);
+      } else {
+        showAdminView('list');
+      }
     });
   }
 

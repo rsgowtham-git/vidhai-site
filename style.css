@@ -1608,6 +1608,101 @@ a:hover {
   color: var(--color-text-muted);
 }
 
+/* Format Painter active state */
+.ql-toolbar.ql-snow button.ql-format-painter.ql-active {
+  background: var(--color-primary);
+  color: #fff;
+  border-radius: var(--radius-sm);
+}
+
+.ql-toolbar.ql-snow button.ql-format-painter.ql-active .ql-stroke {
+  stroke: #fff;
+}
+
+.ql-toolbar.ql-snow button.ql-format-painter {
+  cursor: pointer;
+}
+
+/* Insert Table button */
+.ql-toolbar.ql-snow button.ql-insert-table {
+  cursor: pointer;
+}
+
+/* Table styles inside Quill editor */
+.ql-editor table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--space-3) 0;
+}
+
+.ql-editor table th,
+.ql-editor table td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-size: var(--text-sm);
+}
+
+.ql-editor table th {
+  background: var(--color-surface-2);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.ql-editor table td {
+  background: transparent;
+}
+
+[data-theme="light"] .ql-editor table th {
+  background: var(--color-surface-2);
+}
+
+/* Fix Quill dark theme text highlighting issue */
+/* Reset all Quill default background colors in dark mode */
+.ql-editor {
+  background: transparent !important;
+}
+
+.ql-editor p,
+.ql-editor li,
+.ql-editor h1,
+.ql-editor h2,
+.ql-editor h3,
+.ql-editor h4 {
+  color: var(--color-text);
+}
+
+/* Quill color picker: ensure 'no color' reset works */
+.ql-snow .ql-color-picker .ql-picker-item[data-value=""],
+.ql-snow .ql-color-picker .ql-picker-item:first-child {
+  background: transparent;
+}
+
+/* Override Quill's default background highlight for typed text */
+.ql-container.ql-snow {
+  background: var(--color-surface);
+}
+
+/* Table styles in blog post overlay (for published posts) */
+.blog-post__content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--space-3) 0;
+}
+
+.blog-post__content table th,
+.blog-post__content table td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+  font-size: var(--text-sm);
+}
+
+.blog-post__content table th {
+  background: var(--color-surface-2);
+  font-weight: 600;
+}
+
 /* ========================================
    LINKEDIN BUTTON & VIEW
    ======================================== */
@@ -2094,6 +2189,18 @@ a:hover {
   color: var(--color-primary);
   font-weight: 500;
   margin-top: var(--space-4);
+}
+
+.newsletter__error {
+  font-size: var(--text-sm);
+  color: #ef4444;
+  font-weight: 500;
+  margin-top: var(--space-4);
+}
+
+.newsletter__btn:disabled {
+  opacity: 0.6;
+  cursor: not-allowed;
 }
 
 /* ========================================
