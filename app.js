@@ -966,28 +966,57 @@
       var message = document.getElementById('linkedin-message').value;
       var postToCompany = document.getElementById('linkedin-company').checked;
       var postToPersonal = document.getElementById('linkedin-personal').checked;
+      var successEl = document.getElementById('linkedin-success');
 
-      // Save draft data to global variable
-      window.__vidhaiLinkedInDraft = {
-        message: message,
-        postToCompany: postToCompany,
-        postToPersonal: postToPersonal,
-        timestamp: new Date().toISOString()
-      };
+      if (!message.trim()) {
+        successEl.textContent = 'Please enter a message to post.';
+        successEl.style.display = 'block';
+        successEl.style.color = '#f87171';
+        return;
+      }
 
-      // Copy to clipboard
-      navigator.clipboard.writeText(message).then(function() {
-        var successEl = document.getElementById('linkedin-success');
-        successEl.textContent = '\u2705 Message copied! To publish, tell your AI assistant: "publish this to LinkedIn" \u2014 or post directly at linkedin.com';
+      if (!postToCompany && !postToPersonal) {
+        successEl.textContent = 'Please select at least one destination (personal or company).';
         successEl.style.display = 'block';
-      }).catch(function() {
-        // Fallback: select-and-copy
-        var textarea = document.getElementById('linkedin-message');
-        textarea.select();
-        document.execCommand('copy');
-        var successEl = document.getElementById('linkedin-success');
-        successEl.textContent = '\u2705 Message copied! To publish, tell your AI assistant: "publish this to LinkedIn" \u2014 or post directly at linkedin.com';
+        successEl.style.color = '#f87171';
+        return;
+      }
+
+      // Disable button and show loading
+      linkedinPublishBtn.disabled = true;
+      linkedinPublishBtn.textContent = 'Publishing...';
+      successEl.style.display = 'none';
+
+      // Call the Vercel serverless function
+      fetch('/api/linkedin-post', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          message: message,
+          postToPersonal: postToPersonal,
+          postToCompany: postToCompany
+        })
+      })
+      .then(function(response) { return response.json(); })
+      .then(function(data) {
+        linkedinPublishBtn.disabled = false;
+        linkedinPublishBtn.textContent = 'Publish to LinkedIn';
+        if (data.success) {
+          successEl.textContent = '\u2705 ' + (data.message || 'Posted to LinkedIn!');
+          successEl.style.display = 'block';
+          successEl.style.color = '#5eead4';
+        } else {
+          successEl.textContent = '\u274c ' + (data.message || data.error || 'Failed to post. Please try again.');
+          successEl.style.display = 'block';
+          successEl.style.color = '#f87171';
+        }
+      })
+      .catch(function(err) {
+        linkedinPublishBtn.disabled = false;
+        linkedinPublishBtn.textContent = 'Publish to LinkedIn';
+        successEl.textContent = '\u274c Network error. Please check your connection and try again.';
         successEl.style.display = 'block';
+        successEl.style.color = '#f87171';
       });
     });
   }
