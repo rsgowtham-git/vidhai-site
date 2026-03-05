@@ -45,6 +45,8 @@
 <meta name="twitter:title" content="Vidhai — AI Takes Root">
 <meta name="twitter:description" content="Your curated hub for AI news, semiconductor insights, training resources, and industry impact analysis.">
 
+<link rel="canonical" href="https://www.vidhai.co/">
+
 <!-- Preconnect -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
 <link rel="preconnect" href="https://fonts.gstatic.com" crossorigin>
@@ -65,6 +67,19 @@
   "alternateName": "Vidhai — AI Takes Root",
   "url": "https://vidhai.co",
   "description": "Your curated hub for AI news, semiconductor insights, training resources, and industry impact analysis.",
+  "publisher": {
+    "@type": "Organization",
+    "name": "Vidhai",
+    "url": "https://vidhai.co",
+    "founder": {
+      "@type": "Person",
+      "name": "Gowtham"
+    },
+    "sameAs": [
+      "https://www.linkedin.com/in/gowthamanrajusujatha/",
+      "https://linkedin.com/company/vidh-ai"
+    ]
+  },
   "creator": {
     "@type": "SoftwareApplication",
     "name": "Perplexity Computer",
@@ -109,6 +124,7 @@
       <li><a href="#industries">Industries</a></li>
       <li><a href="#tools">Tools</a></li>
       <li><a href="#blog">Blog</a></li>
+      <li><a href="./about.html">About</a></li>
     </ul>
 
     <div class="nav__actions">
@@ -130,6 +146,7 @@
   <a href="#industries" data-mobile-link>Industries</a>
   <a href="#tools" data-mobile-link>Tools</a>
   <a href="#blog" data-mobile-link>Blog</a>
+  <a href="./about.html" data-mobile-link>About</a>
 </div>
 
 <!-- ========================================
@@ -864,42 +881,38 @@
           <a href="./blog.html" class="blog-view-all__link">View All Posts <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></a>
         </div>
       </div>
-      <!-- Video sidebar -->
+      <!-- Video sidebar (dynamic — loaded from Supabase via API) -->
       <aside class="youtube-sidebar">
-        <h3 class="youtube-sidebar__title">
-          <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
-          Curated Videos
-        </h3>
-        <!-- Video 1: Matt Wolfe — AI News weekly -->
-        <a href="https://www.youtube.com/watch?v=msrbd-d6lWk" target="_blank" rel="noopener noreferrer" class="video-card">
-          <div class="video-card__thumb">
-            <img src="https://img.youtube.com/vi/msrbd-d6lWk/mqdefault.jpg" alt="AI News This Week — Matt Wolfe" loading="lazy">
-            <div class="video-card__play">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="8 5 19 12 8 19"/></svg>
-            </div>
+        <div class="youtube-sidebar__header">
+          <h3 class="youtube-sidebar__title">
+            <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><polygon points="5 3 19 12 5 21 5 3"/></svg>
+            Curated Videos
+          </h3>
+          <button class="video-history-toggle" id="video-history-toggle" aria-label="Show video history" title="View history">
+            <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
+          </button>
+        </div>
+        <div id="video-cards-container" class="video-cards-container">
+          <!-- Rendered dynamically by app.js from API -->
+        </div>
+        <button class="video-load-more" id="video-load-more" style="display:none;">Load More</button>
+        <!-- History panel (hidden by default) -->
+        <div class="video-history-panel" id="video-history-panel" style="display:none;">
+          <div class="video-history-panel__header">
+            <span class="video-history-panel__title">Video History</span>
+            <button class="video-history-panel__close" id="video-history-close" aria-label="Close history">
+              <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg>
+            </button>
           </div>
-          <span class="video-card__label">AI News This Week — Matt Wolfe</span>
-        </a>
-        <!-- Video 2: Two Minute Papers — DeepSeek -->
-        <a href="https://www.youtube.com/watch?v=fFL7la73RO4" target="_blank" rel="noopener noreferrer" class="video-card">
-          <div class="video-card__thumb">
-            <img src="https://img.youtube.com/vi/fFL7la73RO4/mqdefault.jpg" alt="DeepSeek Research — Two Minute Papers" loading="lazy">
-            <div class="video-card__play">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="8 5 19 12 8 19"/></svg>
-            </div>
+          <div class="video-history-panel__tabs">
+            <button class="video-history-tab active" data-filter="all">All</button>
+            <button class="video-history-tab" data-filter="liked">Liked</button>
+            <button class="video-history-tab" data-filter="disliked">Hidden</button>
           </div>
-          <span class="video-card__label">DeepSeek Research — Two Minute Papers</span>
-        </a>
-        <!-- Video 3: Andrew Ng — Generative AI for Everyone -->
-        <a href="https://www.youtube.com/watch?v=sAM_csZ5N5E" target="_blank" rel="noopener noreferrer" class="video-card">
-          <div class="video-card__thumb">
-            <img src="https://img.youtube.com/vi/sAM_csZ5N5E/mqdefault.jpg" alt="Generative AI for Everyone — Andrew Ng" loading="lazy">
-            <div class="video-card__play">
-              <svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="8 5 19 12 8 19"/></svg>
-            </div>
+          <div id="video-history-list" class="video-history-list">
+            <!-- Rendered dynamically -->
           </div>
-          <span class="video-card__label">Generative AI for Everyone — Andrew Ng</span>
-        </a>
+        </div>
       </aside>
     </div>
   </section>
@@ -1086,6 +1099,7 @@
         <a href="#industries">Industries</a>
         <a href="#tools">Tools</a>
         <a href="#blog">Blog</a>
+        <a href="./about.html">About</a>
       </div>
       <div class="footer__col">
         <h4 class="footer__col-title">Connect</h4>

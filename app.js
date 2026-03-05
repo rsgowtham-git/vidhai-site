@@ -434,12 +434,25 @@
       }).join('');
     }
 
+    // Build Article JSON-LD schema
+    var articleSchema = {
+      '@context': 'https://schema.org',
+      '@type': 'Article',
+      'headline': post.title,
+      'author': { '@type': 'Person', 'name': post.author || 'Gowtham' },
+      'datePublished': post.date,
+      'publisher': { '@type': 'Organization', 'name': 'Vidhai', 'url': 'https://vidhai.co' },
+      'description': stripHTMLTags(post.excerpt || '').substring(0, 300)
+    };
+    var schemaScript = '<script type="application/ld+json">' + JSON.stringify(articleSchema) + '<\/script>';
+
     blogPostContent.innerHTML = 
       '<button class="blog-post__close" aria-label="Close article"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
       '<div class="blog-post__meta"><span>' + escapeHTML(post.author) + '</span><span class="dot-separator">' + escapeHTML(post.date) + '</span><span class="dot-separator">' + escapeHTML(post.readTime) + '</span></div>' +
       '<h2 class="blog-post__title">' + escapeHTML(post.title) + '</h2>' +
       '<div class="blog-post__tags">' + tagsHTML + '</div>' +
-      '<div class="blog-post__content">' + contentHTML + '</div>';
+      '<div class="blog-post__content">' + contentHTML + '</div>' +
+      schemaScript;
 
     blogOverlay.classList.add('is-open');
     document.body.style.overflow = 'hidden';
@@ -1326,9 +1339,298 @@
   }
 
   // ========================================
+  // CURATED VIDEOS — Dynamic Sidebar
+  // ========================================
+
+  var videosCache = [];          // All videos from API
+  var videosDisplayCount = 3;    // Number currently shown
+  var VIDEOS_PER_LOAD = 3;       // Increment on "Load More"
+  var videoHistoryFilter = 'all';
+
+  // --- Fetch videos from API ---
+  function fetchVideos(showHistory, callback) {
+    var qs = showHistory ? '?history=true' : '';
+    fetch('/api/videos' + qs)
+      .then(function(res) { return res.json(); })
+      .then(function(data) {
+        if (Array.isArray(data)) {
+          callback(null, data);
+        } else {
+          callback(data.error || 'Unknown error');
+        }
+      })
+      .catch(function(err) {
+        callback(err.message || 'Network error');
+      });
+  }
+
+  // --- Set preference (like/dislike) ---
+  function setVideoPreference(videoId, pref, callback) {
+    fetch('/api/videos', {
+      method: 'PUT',
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify({ video_id: videoId, preference: pref })
+    })
+    .then(function(res) { return res.json(); })
+    .then(function(data) {
+      callback(null, data);
+    })
+    .catch(function(err) {
+      callback(err.message || 'Network error');
+    });
+  }
+
+  // --- Render a single video card with thumbs ---
+  function renderVideoCard(video) {
+    var wrapper = document.createElement('div');
+    wrapper.className = 'video-card-wrapper';
+    wrapper.setAttribute('data-video-id', video.id);
+
+    var isLiked = video.preference === 'liked';
+    var isDisliked = video.preference === 'disliked';
+
+    wrapper.innerHTML =
+      '<a href="' + escapeHTML(video.url) + '" target="_blank" rel="noopener noreferrer" class="video-card">' +
+        '<div class="video-card__thumb">' +
+          '<img src="' + escapeHTML(video.thumbnail) + '" alt="' + escapeHTML(video.title) + '" loading="lazy">' +
+          '<div class="video-card__play">' +
+            '<svg width="24" height="24" viewBox="0 0 24 24" fill="white"><polygon points="8 5 19 12 8 19"/></svg>' +
+          '</div>' +
+        '</div>' +
+        '<span class="video-card__label">' + escapeHTML(video.title) + '</span>' +
+      '</a>' +
+      '<div class="video-card__actions">' +
+        '<button class="video-pref-btn' + (isLiked ? ' liked' : '') + '" data-action="liked" data-video-id="' + video.id + '" aria-label="Like" title="More like this">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="' + (isLiked ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' +
+        '</button>' +
+        '<button class="video-pref-btn' + (isDisliked ? ' disliked' : '') + '" data-action="disliked" data-video-id="' + video.id + '" aria-label="Dislike" title="Not for me">' +
+          '<svg width="14" height="14" viewBox="0 0 24 24" fill="' + (isDisliked ? 'currentColor' : 'none') + '" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>' +
+        '</button>' +
+        (video.category ? '<span class="video-card__category">' + escapeHTML(video.category) + '</span>' : '') +
+      '</div>';
+
+    return wrapper;
+  }
+
+  // --- Escape HTML helper ---
+  function escapeHTML(str) {
+    if (!str) return '';
+    var div = document.createElement('div');
+    div.appendChild(document.createTextNode(str));
+    return div.innerHTML;
+  }
+
+  // --- Render video sidebar ---
+  function renderVideoSidebar() {
+    var container = document.getElementById('video-cards-container');
+    var loadMoreBtn = document.getElementById('video-load-more');
+    if (!container) return;
+
+    fetchVideos(false, function(err, videos) {
+      if (err || !videos) {
+        container.innerHTML = '<p style="color:var(--color-text-muted);font-size:var(--text-xs);">Could not load videos.</p>';
+        return;
+      }
+      videosCache = videos;
+      videosDisplayCount = Math.min(VIDEOS_PER_LOAD, videos.length);
+      renderVideoCards();
+    });
+  }
+
+  function renderVideoCards() {
+    var container = document.getElementById('video-cards-container');
+    var loadMoreBtn = document.getElementById('video-load-more');
+    if (!container) return;
+
+    container.innerHTML = '';
+    var showing = videosCache.slice(0, videosDisplayCount);
+    for (var i = 0; i < showing.length; i++) {
+      container.appendChild(renderVideoCard(showing[i]));
+    }
+
+    // Show/hide load more
+    if (loadMoreBtn) {
+      loadMoreBtn.style.display = (videosDisplayCount < videosCache.length) ? 'block' : 'none';
+    }
+
+    // Attach pref button events
+    attachVideoPreferenceEvents(container);
+  }
+
+  // --- Attach click handlers for thumbs ---
+  function attachVideoPreferenceEvents(container) {
+    var btns = container.querySelectorAll('.video-pref-btn');
+    for (var i = 0; i < btns.length; i++) {
+      btns[i].addEventListener('click', function(e) {
+        e.preventDefault();
+        e.stopPropagation();
+        var btn = e.currentTarget;
+        var action = btn.getAttribute('data-action');
+        var videoId = parseInt(btn.getAttribute('data-video-id'), 10);
+
+        setVideoPreference(videoId, action, function(err) {
+          if (err) return;
+
+          // Update local cache
+          for (var j = 0; j < videosCache.length; j++) {
+            if (videosCache[j].id === videoId) {
+              videosCache[j].preference = action;
+              break;
+            }
+          }
+
+          if (action === 'disliked') {
+            // Animate removal
+            var wrapper = container.querySelector('[data-video-id="' + videoId + '"]');
+            if (wrapper) {
+              wrapper.classList.add('fade-out');
+              setTimeout(function() {
+                // Remove from cache and re-render
+                videosCache = videosCache.filter(function(v) { return v.id !== videoId; });
+                renderVideoCards();
+              }, 350);
+            }
+          } else {
+            // Re-render to update button state
+            renderVideoCards();
+          }
+        });
+      });
+    }
+  }
+
+  // --- Load More button ---
+  var loadMoreBtn = document.getElementById('video-load-more');
+  if (loadMoreBtn) {
+    loadMoreBtn.addEventListener('click', function() {
+      videosDisplayCount = Math.min(videosDisplayCount + VIDEOS_PER_LOAD, videosCache.length);
+      renderVideoCards();
+    });
+  }
+
+  // --- History Panel ---
+  var historyToggle = document.getElementById('video-history-toggle');
+  var historyPanel = document.getElementById('video-history-panel');
+  var historyClose = document.getElementById('video-history-close');
+
+  if (historyToggle && historyPanel) {
+    historyToggle.addEventListener('click', function() {
+      var isOpen = historyPanel.style.display !== 'none';
+      if (isOpen) {
+        historyPanel.style.display = 'none';
+        historyToggle.classList.remove('active');
+      } else {
+        historyPanel.style.display = 'block';
+        historyToggle.classList.add('active');
+        loadVideoHistory('all');
+      }
+    });
+  }
+
+  if (historyClose && historyPanel) {
+    historyClose.addEventListener('click', function() {
+      historyPanel.style.display = 'none';
+      if (historyToggle) historyToggle.classList.remove('active');
+    });
+  }
+
+  // --- History Tabs ---
+  var historyTabs = document.querySelectorAll('.video-history-tab');
+  for (var ti = 0; ti < historyTabs.length; ti++) {
+    historyTabs[ti].addEventListener('click', function(e) {
+      var filter = e.currentTarget.getAttribute('data-filter');
+      // Update active tab
+      for (var tj = 0; tj < historyTabs.length; tj++) {
+        historyTabs[tj].classList.remove('active');
+      }
+      e.currentTarget.classList.add('active');
+      loadVideoHistory(filter);
+    });
+  }
+
+  function loadVideoHistory(filter) {
+    videoHistoryFilter = filter;
+    var listEl = document.getElementById('video-history-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = '<p class="video-history-empty">Loading...</p>';
+
+    fetchVideos(true, function(err, allVideos) {
+      if (err || !allVideos) {
+        listEl.innerHTML = '<p class="video-history-empty">Could not load history.</p>';
+        return;
+      }
+
+      // Filter
+      var filtered = allVideos;
+      if (filter === 'liked') {
+        filtered = allVideos.filter(function(v) { return v.preference === 'liked'; });
+      } else if (filter === 'disliked') {
+        filtered = allVideos.filter(function(v) { return v.preference === 'disliked'; });
+      }
+
+      if (filtered.length === 0) {
+        listEl.innerHTML = '<p class="video-history-empty">No videos found.</p>';
+        return;
+      }
+
+      listEl.innerHTML = '';
+      for (var i = 0; i < filtered.length; i++) {
+        listEl.appendChild(renderHistoryItem(filtered[i]));
+      }
+    });
+  }
+
+  function renderHistoryItem(video) {
+    var item = document.createElement('a');
+    item.href = video.url;
+    item.target = '_blank';
+    item.rel = 'noopener noreferrer';
+    item.className = 'video-history-item';
+
+    var prefIcon = '';
+    if (video.preference === 'liked') {
+      prefIcon = '<span class="video-history-item__pref liked" title="Liked">' +
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M14 9V5a3 3 0 0 0-3-3l-4 9v11h11.28a2 2 0 0 0 2-1.7l1.38-9a2 2 0 0 0-2-2.3zM7 22H4a2 2 0 0 1-2-2v-7a2 2 0 0 1 2-2h3"/></svg>' +
+        '</span>';
+    } else if (video.preference === 'disliked') {
+      prefIcon = '<span class="video-history-item__pref disliked" title="Hidden">' +
+        '<svg width="10" height="10" viewBox="0 0 24 24" fill="currentColor" stroke="currentColor" stroke-width="2"><path d="M10 15v4a3 3 0 0 0 3 3l4-9V2H5.72a2 2 0 0 0-2 1.7l-1.38 9a2 2 0 0 0 2 2.3zm7-13h2.67A2.31 2.31 0 0 1 22 4v7a2.31 2.31 0 0 1-2.33 2H17"/></svg>' +
+        '</span>';
+    }
+
+    var dateStr = '';
+    if (video.added_date) {
+      try {
+        dateStr = new Date(video.added_date).toLocaleDateString('en-US', { month: 'short', day: 'numeric' });
+      } catch(e) { /* ignore */ }
+    }
+
+    item.innerHTML =
+      '<div class="video-history-item__thumb">' +
+        '<img src="' + escapeHTML(video.thumbnail) + '" alt="" loading="lazy">' +
+      '</div>' +
+      '<div class="video-history-item__info">' +
+        '<div class="video-history-item__title">' + escapeHTML(video.title) + '</div>' +
+        '<div class="video-history-item__meta">' +
+          (dateStr ? dateStr : '') +
+          (video.source_channel ? ' · ' + escapeHTML(video.source_channel) : '') +
+          ' ' + prefIcon +
+        '</div>' +
+      '</div>';
+
+    return item;
+  }
+
+  // ========================================
   // INITIALIZATION
   // ========================================
   detectPage();
+
+  // Load curated videos sidebar (home page only)
+  if (!isBlogPage) {
+    renderVideoSidebar();
+  }
 
   loadPosts(function() {
     if (isBlogPage) {
