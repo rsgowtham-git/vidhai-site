@@ -1,0 +1,32 @@
+[
+  {
+    "id": "post-1",
+    "title": "Why I Started Vidhai",
+    "date": "March 4, 2026",
+    "author": "Gowtham",
+    "readTime": "3 min read",
+    "tags": ["Personal", "AI", "Vision"],
+    "excerpt": "In Tamil, \u2018Vidhai\u2019 means seed. Every transformative technology starts as a seed \u2014 an idea that, given the right conditions, grows into something that reshapes the world. AI is that seed for our generation.",
+    "content": "In Tamil, \u2018Vidhai\u2019 means seed. Every transformative technology starts as a seed \u2014 an idea that, given the right conditions, grows into something that reshapes the world. AI is that seed for our generation.\n\nAs someone who has spent over two decades in manufacturing, engineering services, and business development, I\u2019ve watched technology waves come and go. But generative AI is different. It\u2019s not just automating tasks \u2014 it\u2019s fundamentally changing how we think, create, and solve problems.\n\nI created Vidhai to be a curated space where professionals like me can stay informed without drowning in noise. This isn\u2019t about hype. It\u2019s about understanding which AI developments actually matter, which training paths are worth your time, and how specific industries are being transformed.\n\nWhether you\u2019re an executive trying to understand AI\u2019s impact on your supply chain, an engineer exploring automation opportunities, or simply curious about the technology reshaping every industry \u2014 Vidhai is your starting point.\n\nThe seed has been planted. Let\u2019s watch it grow."
+  },
+  {
+    "id": "post-2",
+    "title": "5 Free AI Courses Every Professional Should Take in 2026",
+    "date": "March 4, 2026",
+    "author": "Gowtham",
+    "readTime": "5 min read",
+    "tags": ["Training", "Career", "Free Resources"],
+    "excerpt": "You don\u2019t need a computer science degree to understand AI. These five free courses will give any working professional a solid foundation \u2014 from strategy to hands-on application.",
+    "content": "You don\u2019t need a computer science degree to understand AI. These five free courses will give any working professional a solid foundation \u2014 from strategy to hands-on application.\n\n1. Elements of AI (University of Helsinki) \u2014 The gold standard for AI literacy. 30 hours of accessible content covering AI\u2019s potential, limitations, and societal impact. Available in 25+ languages with a free certificate.\n\n2. AI For Everyone by Andrew Ng \u2014 Built specifically for non-technical professionals. Learn to spot AI opportunities in your organization, work effectively with AI teams, and build AI strategies. About 8-10 hours on Coursera.\n\n3. Generative AI for Everyone (DeepLearning.AI) \u2014 Covers prompt engineering, responsible AI, and practical applications. Perfect for understanding the current wave of AI tools like ChatGPT and Claude.\n\n4. Prompt Engineering for ChatGPT (Vanderbilt) \u2014 18 hours of hands-on training in crafting effective prompts. This is the most immediately practical skill any knowledge worker can develop today.\n\n5. Microsoft AI Fundamentals \u2014 6-8 hours on Microsoft Learn with free hands-on labs. Great for understanding enterprise AI services and optionally pursuing AI-900 certification.\n\nThe barrier to AI literacy has never been lower. Pick one and start this week."
+  },
+  {
+    "id": "post-3",
+    "title": "How AI is Transforming Manufacturing \u2014 A Practitioner\u2019s View",
+    "date": "March 4, 2026",
+    "author": "Gowtham",
+    "readTime": "6 min read",
+    "tags": ["Manufacturing", "Industry 4.0", "Vision Inspection"],
+    "excerpt": "Having worked in industrial automation for years, I\u2019ve seen firsthand how AI is reshaping factory floors \u2014 from vision inspection systems to predictive maintenance and beyond.",
+    "content": "Having worked in industrial automation for years, I\u2019ve seen firsthand how AI is reshaping factory floors \u2014 from vision inspection systems to predictive maintenance and beyond.\n\nThe numbers tell a compelling story: over 60% of leading manufacturers now employ AI for quality inspections, yield improvement, and supply chain optimization. The global AI-in-manufacturing market is projected to grow at 28% CAGR through 2040.\n\nBut the real transformation isn\u2019t in the numbers \u2014 it\u2019s in what\u2019s happening on the shop floor.\n\nVision Inspection: AI-powered computer vision can now detect defects that would take human inspectors hours. Real-time quality control using AI vision allows immediate detection of cracks, contamination, and dimensional errors on production lines.\n\nPredictive Maintenance: Machine learning models analyze equipment sensor data to predict failures before they happen. This shifts maintenance from reactive to proactive, reducing downtime by 30-50% in well-implemented systems.\n\nDigital Twins: AI-driven simulations of manufacturing processes let you optimize parameters like temperature, pressure, and mixing speeds before touching the physical line. The result: less waste, better yields.\n\nSupply Chain Intelligence: The semiconductor supply crisis \u2014 where AI data centers are consuming 70% of all memory chips \u2014 shows why AI-powered supply chain visibility isn\u2019t optional anymore. Companies like Tesla are using AI to manage dual-sourcing strategies across TSMC and Samsung.\n\nThe manufacturers who thrive in the next decade won\u2019t be the ones with the biggest factories. They\u2019ll be the ones who best integrate AI into every part of their operations."
+  }
+]

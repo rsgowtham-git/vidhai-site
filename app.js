@@ -5,49 +5,49 @@
 (function() {
   'use strict';
 
-  // --- Default blog posts (seeded on first load) ---
-  var defaultBlogPosts = [
-    {
-      id: 'post-1',
-      title: "Why I Started Vidhai",
-      date: "March 4, 2026",
-      author: "Gowtham",
-      readTime: "3 min read",
-      tags: ["Personal", "AI", "Vision"],
-      excerpt: "In Tamil, \u2018Vidhai\u2019 means seed. Every transformative technology starts as a seed \u2014 an idea that, given the right conditions, grows into something that reshapes the world. AI is that seed for our generation.",
-      content: "In Tamil, \u2018Vidhai\u2019 means seed. Every transformative technology starts as a seed \u2014 an idea that, given the right conditions, grows into something that reshapes the world. AI is that seed for our generation.\n\nAs someone who has spent over two decades in manufacturing, engineering services, and business development, I\u2019ve watched technology waves come and go. But generative AI is different. It\u2019s not just automating tasks \u2014 it\u2019s fundamentally changing how we think, create, and solve problems.\n\nI created Vidhai to be a curated space where professionals like me can stay informed without drowning in noise. This isn\u2019t about hype. It\u2019s about understanding which AI developments actually matter, which training paths are worth your time, and how specific industries are being transformed.\n\nWhether you\u2019re an executive trying to understand AI\u2019s impact on your supply chain, an engineer exploring automation opportunities, or simply curious about the technology reshaping every industry \u2014 Vidhai is your starting point.\n\nThe seed has been planted. Let\u2019s watch it grow."
-    },
-    {
-      id: 'post-2',
-      title: "5 Free AI Courses Every Professional Should Take in 2026",
-      date: "March 4, 2026",
-      author: "Gowtham",
-      readTime: "5 min read",
-      tags: ["Training", "Career", "Free Resources"],
-      excerpt: "You don\u2019t need a computer science degree to understand AI. These five free courses will give any working professional a solid foundation \u2014 from strategy to hands-on application.",
-      content: "You don\u2019t need a computer science degree to understand AI. These five free courses will give any working professional a solid foundation \u2014 from strategy to hands-on application.\n\n1. Elements of AI (University of Helsinki) \u2014 The gold standard for AI literacy. 30 hours of accessible content covering AI\u2019s potential, limitations, and societal impact. Available in 25+ languages with a free certificate.\n\n2. AI For Everyone by Andrew Ng \u2014 Built specifically for non-technical professionals. Learn to spot AI opportunities in your organization, work effectively with AI teams, and build AI strategies. About 8-10 hours on Coursera.\n\n3. Generative AI for Everyone (DeepLearning.AI) \u2014 Covers prompt engineering, responsible AI, and practical applications. Perfect for understanding the current wave of AI tools like ChatGPT and Claude.\n\n4. Prompt Engineering for ChatGPT (Vanderbilt) \u2014 18 hours of hands-on training in crafting effective prompts. This is the most immediately practical skill any knowledge worker can develop today.\n\n5. Microsoft AI Fundamentals \u2014 6-8 hours on Microsoft Learn with free hands-on labs. Great for understanding enterprise AI services and optionally pursuing AI-900 certification.\n\nThe barrier to AI literacy has never been lower. Pick one and start this week."
-    },
-    {
-      id: 'post-3',
-      title: "How AI is Transforming Manufacturing \u2014 A Practitioner\u2019s View",
-      date: "March 4, 2026",
-      author: "Gowtham",
-      readTime: "6 min read",
-      tags: ["Manufacturing", "Industry 4.0", "Vision Inspection"],
-      excerpt: "Having worked in industrial automation for years, I\u2019ve seen firsthand how AI is reshaping factory floors \u2014 from vision inspection systems to predictive maintenance and beyond.",
-      content: "Having worked in industrial automation for years, I\u2019ve seen firsthand how AI is reshaping factory floors \u2014 from vision inspection systems to predictive maintenance and beyond.\n\nThe numbers tell a compelling story: over 60% of leading manufacturers now employ AI for quality inspections, yield improvement, and supply chain optimization. The global AI-in-manufacturing market is projected to grow at 28% CAGR through 2040.\n\nBut the real transformation isn\u2019t in the numbers \u2014 it\u2019s in what\u2019s happening on the shop floor.\n\nVision Inspection: AI-powered computer vision can now detect defects that would take human inspectors hours. Real-time quality control using AI vision allows immediate detection of cracks, contamination, and dimensional errors on production lines.\n\nPredictive Maintenance: Machine learning models analyze equipment sensor data to predict failures before they happen. This shifts maintenance from reactive to proactive, reducing downtime by 30-50% in well-implemented systems.\n\nDigital Twins: AI-driven simulations of manufacturing processes let you optimize parameters like temperature, pressure, and mixing speeds before touching the physical line. The result: less waste, better yields.\n\nSupply Chain Intelligence: The semiconductor supply crisis \u2014 where AI data centers are consuming 70% of all memory chips \u2014 shows why AI-powered supply chain visibility isn\u2019t optional anymore. Companies like Tesla are using AI to manage dual-sourcing strategies across TSMC and Samsung.\n\nThe manufacturers who thrive in the next decade won\u2019t be the ones with the biggest factories. They\u2019ll be the ones who best integrate AI into every part of their operations."
-    }
-  ];
+  // --- Quill Editor Instance ---
+  var quillEditor = null;
 
-  // --- Blog Data (in-memory store) ---
-  var STORAGE_KEY = 'vidhai_blog_posts';
+  // --- Blog Data (in-memory store, loaded from posts.json) ---
   var memoryPosts = null;
+  var postsLoaded = false;
+
+  // --- Blog Page State ---
+  var POSTS_PER_PAGE = 6;
+  var currentPage = 1;
+  var activeTag = 'All';
+
+  // --- Page Detection ---
+  var isBlogPage = false;
+
+  function detectPage() {
+    isBlogPage = !!document.getElementById('blog-page-container');
+  }
+
+  // --- Load Posts from posts.json ---
+  function loadPosts(callback) {
+    if (postsLoaded && memoryPosts) {
+      callback(memoryPosts);
+      return;
+    }
+    fetch('./posts.json')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        memoryPosts = data;
+        postsLoaded = true;
+        callback(memoryPosts);
+      })
+      .catch(function(err) {
+        console.warn('Could not load posts.json, using empty array:', err);
+        memoryPosts = [];
+        postsLoaded = true;
+        callback(memoryPosts);
+      });
+  }
 
   function getPosts() {
     if (memoryPosts) return memoryPosts;
-    // Seed defaults
-    memoryPosts = defaultBlogPosts.slice();
-    return memoryPosts;
+    return [];
   }
 
   function savePosts(posts) {
@@ -73,16 +73,19 @@
     return dateStr;
   }
 
-  // --- Render Blog Cards ---
+  // --- Render Blog Cards (Homepage — first 3 only) ---
   function renderBlogCards() {
     var container = document.getElementById('blog-cards-container');
     if (!container) return;
     var posts = getPosts();
-    
-    container.innerHTML = posts.map(function(post, i) {
+    var displayPosts = posts.slice(0, 3);
+
+    container.innerHTML = displayPosts.map(function(post, i) {
       var tagsHTML = (post.tags || []).map(function(t) {
         return '<span class="badge badge--tag">' + escapeHTML(t) + '</span>';
       }).join('');
+
+      var excerptText = escapeHTML(stripHTMLTags(post.excerpt));
 
       return '<article class="blog-card" data-blog="' + i + '">' +
         '<div class="blog-card__meta">' +
@@ -91,7 +94,7 @@
           '<span class="dot-separator">' + escapeHTML(post.readTime) + '</span>' +
         '</div>' +
         '<h3 class="blog-card__title">' + escapeHTML(post.title) + '</h3>' +
-        '<p class="blog-card__excerpt">' + escapeHTML(post.excerpt) + '</p>' +
+        '<p class="blog-card__excerpt">' + excerptText + '</p>' +
         '<div class="blog-card__tags">' + tagsHTML + '</div>' +
         '<span class="blog-card__read-more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></span>' +
       '</article>';
@@ -119,9 +122,167 @@
     });
   }
 
+  // --- Blog Page: Render with Pagination & Tag Filtering ---
+  function getFilteredPosts() {
+    var posts = getPosts();
+    if (activeTag === 'All') return posts;
+    return posts.filter(function(post) {
+      return (post.tags || []).indexOf(activeTag) !== -1;
+    });
+  }
+
+  function getAllTags() {
+    var posts = getPosts();
+    var tagSet = {};
+    posts.forEach(function(post) {
+      (post.tags || []).forEach(function(tag) {
+        tagSet[tag] = true;
+      });
+    });
+    return Object.keys(tagSet).sort();
+  }
+
+  function renderTagFilters() {
+    var container = document.getElementById('blog-tag-filters');
+    if (!container) return;
+
+    var tags = getAllTags();
+    var allTags = ['All'].concat(tags);
+
+    container.innerHTML = '<div class="blog-tag-filters__inner">' +
+      allTags.map(function(tag) {
+        var isActive = tag === activeTag;
+        return '<button class="blog-tag-btn' + (isActive ? ' blog-tag-btn--active' : '') + '" data-tag="' + escapeHTML(tag) + '">' + escapeHTML(tag) + '</button>';
+      }).join('') +
+    '</div>';
+
+    // Bind tag clicks
+    container.querySelectorAll('[data-tag]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        activeTag = btn.getAttribute('data-tag');
+        currentPage = 1;
+        renderTagFilters();
+        renderBlogPage();
+        renderPagination();
+      });
+    });
+  }
+
+  function renderBlogPage() {
+    var container = document.getElementById('blog-page-container');
+    if (!container) return;
+
+    var filtered = getFilteredPosts();
+    var start = (currentPage - 1) * POSTS_PER_PAGE;
+    var end = start + POSTS_PER_PAGE;
+    var pagePosts = filtered.slice(start, end);
+
+    if (pagePosts.length === 0) {
+      container.innerHTML = '<div class="blog-empty"><p>No posts found' + (activeTag !== 'All' ? ' for tag "' + escapeHTML(activeTag) + '"' : '') + '.</p></div>';
+      return;
+    }
+
+    // We need the global index in the full (unfiltered) posts array to open the correct post
+    var allPosts = getPosts();
+
+    container.innerHTML = pagePosts.map(function(post) {
+      var globalIndex = allPosts.indexOf(post);
+      var tagsHTML = (post.tags || []).map(function(t) {
+        return '<span class="badge badge--tag">' + escapeHTML(t) + '</span>';
+      }).join('');
+
+      var excerptText = escapeHTML(stripHTMLTags(post.excerpt));
+
+      return '<article class="blog-card" data-blog="' + globalIndex + '">' +
+        '<div class="blog-card__meta">' +
+          '<span>' + escapeHTML(post.author || 'Gowtham') + '</span>' +
+          '<span class="dot-separator">' + escapeHTML(post.date) + '</span>' +
+          '<span class="dot-separator">' + escapeHTML(post.readTime) + '</span>' +
+        '</div>' +
+        '<h3 class="blog-card__title">' + escapeHTML(post.title) + '</h3>' +
+        '<p class="blog-card__excerpt">' + excerptText + '</p>' +
+        '<div class="blog-card__tags">' + tagsHTML + '</div>' +
+        '<span class="blog-card__read-more">Read more <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg></span>' +
+      '</article>';
+    }).join('');
+
+    // Bind clicks
+    container.querySelectorAll('[data-blog]').forEach(function(card) {
+      card.addEventListener('click', function() {
+        openBlog(parseInt(card.getAttribute('data-blog'), 10));
+      });
+      card.setAttribute('tabindex', '0');
+      card.setAttribute('role', 'button');
+      card.addEventListener('keydown', function(e) {
+        if (e.key === 'Enter' || e.key === ' ') {
+          e.preventDefault();
+          openBlog(parseInt(card.getAttribute('data-blog'), 10));
+        }
+      });
+    });
+
+    // Re-run reveal for new cards
+    container.classList.remove('is-visible');
+    requestAnimationFrame(function() {
+      container.classList.add('is-visible');
+    });
+  }
+
+  function renderPagination() {
+    var container = document.getElementById('blog-pagination');
+    if (!container) return;
+
+    var filtered = getFilteredPosts();
+    var totalPages = Math.max(1, Math.ceil(filtered.length / POSTS_PER_PAGE));
+
+    if (totalPages <= 1) {
+      container.innerHTML = '';
+      return;
+    }
+
+    var prevDisabled = currentPage <= 1;
+    var nextDisabled = currentPage >= totalPages;
+
+    container.innerHTML =
+      '<button class="blog-pagination__btn' + (prevDisabled ? ' blog-pagination__btn--disabled' : '') + '" id="pagination-prev"' + (prevDisabled ? ' disabled' : '') + '>' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M19 12H5"/><path d="M12 19l-7-7 7-7"/></svg> Previous' +
+      '</button>' +
+      '<span class="blog-pagination__info">Page ' + currentPage + ' of ' + totalPages + '</span>' +
+      '<button class="blog-pagination__btn' + (nextDisabled ? ' blog-pagination__btn--disabled' : '') + '" id="pagination-next"' + (nextDisabled ? ' disabled' : '') + '>' +
+        'Next <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12h14"/><path d="M12 5l7 7-7 7"/></svg>' +
+      '</button>';
+
+    var prevBtn = document.getElementById('pagination-prev');
+    var nextBtn = document.getElementById('pagination-next');
+
+    if (prevBtn && !prevDisabled) {
+      prevBtn.addEventListener('click', function() {
+        currentPage--;
+        renderBlogPage();
+        renderPagination();
+        window.scrollTo({ top: document.getElementById('blog-page-section').offsetTop - 80, behavior: 'smooth' });
+      });
+    }
+    if (nextBtn && !nextDisabled) {
+      nextBtn.addEventListener('click', function() {
+        currentPage++;
+        renderBlogPage();
+        renderPagination();
+        window.scrollTo({ top: document.getElementById('blog-page-section').offsetTop - 80, behavior: 'smooth' });
+      });
+    }
+  }
+
   function escapeHTML(str) {
     if (!str) return '';
     return str.replace(/&/g,'&amp;').replace(/</g,'&lt;').replace(/>/g,'&gt;').replace(/"/g,'&quot;');
+  }
+
+  function stripHTMLTags(html) {
+    if (!html) return '';
+    var tmp = document.createElement('div');
+    tmp.innerHTML = html;
+    return tmp.textContent || tmp.innerText || '';
   }
 
   // --- Theme Toggle ---
@@ -180,13 +341,15 @@
 
   // --- Nav scroll effect ---
   var nav = document.querySelector('.nav');
-  window.addEventListener('scroll', function() {
-    if (window.scrollY > 20) {
-      nav.classList.add('nav--scrolled');
-    } else {
-      nav.classList.remove('nav--scrolled');
-    }
-  }, { passive: true });
+  if (nav) {
+    window.addEventListener('scroll', function() {
+      if (window.scrollY > 20) {
+        nav.classList.add('nav--scrolled');
+      } else {
+        nav.classList.remove('nav--scrolled');
+      }
+    }, { passive: true });
+  }
 
   // --- Tabs ---
   var tabBtns = document.querySelectorAll('.tab-btn');
@@ -240,16 +403,23 @@
       return '<span class="badge badge--tag">' + escapeHTML(t) + '</span>';
     }).join('');
 
-    var paragraphs = post.content.split('\n\n').map(function(p) {
-      return '<p>' + escapeHTML(p) + '</p>';
-    }).join('');
+    // Check if content contains HTML tags (rich text)
+    var isRichContent = /<[a-z][\s\S]*>/i.test(post.content);
+    var contentHTML;
+    if (isRichContent) {
+      contentHTML = post.content;
+    } else {
+      contentHTML = post.content.split('\n\n').map(function(p) {
+        return '<p>' + escapeHTML(p) + '</p>';
+      }).join('');
+    }
 
     blogPostContent.innerHTML = 
       '<button class="blog-post__close" aria-label="Close article"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><line x1="18" y1="6" x2="6" y2="18"/><line x1="6" y1="6" x2="18" y2="18"/></svg></button>' +
       '<div class="blog-post__meta"><span>' + escapeHTML(post.author) + '</span><span class="dot-separator">' + escapeHTML(post.date) + '</span><span class="dot-separator">' + escapeHTML(post.readTime) + '</span></div>' +
       '<h2 class="blog-post__title">' + escapeHTML(post.title) + '</h2>' +
       '<div class="blog-post__tags">' + tagsHTML + '</div>' +
-      '<div class="blog-post__content">' + paragraphs + '</div>';
+      '<div class="blog-post__content">' + contentHTML + '</div>';
 
     blogOverlay.classList.add('is-open');
     document.body.style.overflow = 'hidden';
@@ -275,9 +445,6 @@
     }
   });
 
-  // Initial blog render
-  renderBlogCards();
-
   // ========================================
   // NEWSLETTER FORM
   // ========================================
@@ -297,7 +464,6 @@
   // ========================================
   // ADMIN PANEL
   // ========================================
-  var ADMIN_KEY = 'vidhai_admin_auth';
   var adminAuthenticated = false;
   var adminPanel = document.getElementById('admin-panel');
   var adminOverlay = document.getElementById('admin-overlay');
@@ -380,6 +546,7 @@
 
   // --- Admin Views ---
   function showAdminView(view) {
+    if (!adminPanel) return;
     var views = adminPanel.querySelectorAll('[data-admin-view]');
     views.forEach(function(v) {
       v.style.display = v.getAttribute('data-admin-view') === view ? 'block' : 'none';
@@ -404,6 +571,10 @@
           '<span class="admin-post-item__meta">' + escapeHTML(post.date) + ' &middot; ' + escapeHTML(post.author || 'Gowtham') + '</span>' +
         '</div>' +
         '<div class="admin-post-item__actions">' +
+          '<button class="admin-btn admin-btn--sm admin-btn--linkedin-sm" data-linkedin-index="' + i + '" title="Post to LinkedIn">' +
+            '<svg width="12" height="12" viewBox="0 0 24 24" fill="currentColor"><path d="M20.447 20.452h-3.554v-5.569c0-1.328-.027-3.037-1.852-3.037-1.853 0-2.136 1.445-2.136 2.939v5.667H9.351V9h3.414v1.561h.046c.477-.9 1.637-1.85 3.37-1.85 3.601 0 4.267 2.37 4.267 5.455v6.286zM5.337 7.433c-1.144 0-2.063-.926-2.063-2.065 0-1.138.92-2.063 2.063-2.063 1.14 0 2.064.925 2.064 2.063 0 1.139-.925 2.065-2.064 2.065zm1.782 13.019H3.555V9h3.564v11.452zM22.225 0H1.771C.792 0 0 .774 0 1.729v20.542C0 23.227.792 24 1.771 24h20.451C23.2 24 24 23.227 24 22.271V1.729C24 .774 23.2 0 22.222 0h.003z"/></svg>' +
+            ' LinkedIn' +
+          '</button>' +
           '<button class="admin-btn admin-btn--sm admin-btn--edit" data-edit-index="' + i + '">Edit</button>' +
           '<button class="admin-btn admin-btn--sm admin-btn--delete" data-delete-index="' + i + '">Delete</button>' +
         '</div>' +
@@ -423,6 +594,40 @@
         deletePost(parseInt(btn.getAttribute('data-delete-index'), 10));
       });
     });
+
+    // Bind LinkedIn
+    listEl.querySelectorAll('[data-linkedin-index]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        openLinkedInView(parseInt(btn.getAttribute('data-linkedin-index'), 10));
+      });
+    });
+  }
+
+  // --- Quill Init ---
+  function initQuill() {
+    var editorContainer = document.getElementById('editor-content-quill');
+    if (!editorContainer) return;
+    // Destroy previous instance if any
+    if (quillEditor) {
+      quillEditor = null;
+      editorContainer.innerHTML = '';
+    }
+    quillEditor = new Quill('#editor-content-quill', {
+      theme: 'snow',
+      placeholder: 'Write your post here...',
+      modules: {
+        toolbar: [
+          [{ 'header': [1, 2, 3, false] }],
+          [{ 'size': ['small', false, 'large', 'huge'] }],
+          ['bold', 'italic', 'underline', 'strike'],
+          [{ 'list': 'ordered' }, { 'list': 'bullet' }],
+          ['blockquote', 'code-block'],
+          [{ 'background': [] }],
+          ['link'],
+          ['clean']
+        ]
+      }
+    });
   }
 
   // --- New Post ---
@@ -433,6 +638,7 @@
       clearEditorForm();
       document.getElementById('admin-editor-title-text').textContent = 'New Post';
       showAdminView('editor');
+      initQuill();
     });
   }
 
@@ -452,6 +658,11 @@
     document.getElementById('editor-content').value = post.content || '';
     document.getElementById('admin-editor-title-text').textContent = 'Edit Post';
     showAdminView('editor');
+    initQuill();
+    // Load content into Quill
+    if (quillEditor && post.content) {
+      quillEditor.root.innerHTML = post.content;
+    }
   }
 
   function clearEditorForm() {
@@ -460,6 +671,20 @@
     document.getElementById('editor-tags').value = '';
     document.getElementById('editor-excerpt').value = '';
     document.getElementById('editor-content').value = '';
+    if (quillEditor) {
+      quillEditor.root.innerHTML = '';
+    }
+  }
+
+  // --- Refresh all blog views ---
+  function refreshAllViews() {
+    if (isBlogPage) {
+      renderTagFilters();
+      renderBlogPage();
+      renderPagination();
+    } else {
+      renderBlogCards();
+    }
   }
 
   // --- Save Post ---
@@ -473,7 +698,16 @@
       var author = document.getElementById('editor-author').value.trim() || 'Gowtham';
       var tagsStr = document.getElementById('editor-tags').value.trim();
       var excerpt = document.getElementById('editor-excerpt').value.trim();
-      var content = document.getElementById('editor-content').value.trim();
+
+      // Get content from Quill if available, fallback to textarea
+      var content;
+      if (quillEditor) {
+        content = quillEditor.root.innerHTML.trim();
+        // If Quill is empty it may contain just <p><br></p>
+        if (content === '<p><br></p>' || content === '') content = '';
+      } else {
+        content = document.getElementById('editor-content').value.trim();
+      }
 
       if (!title || !content) {
         alert('Title and content are required.');
@@ -481,7 +715,8 @@
       }
 
       var tags = tagsStr ? tagsStr.split(',').map(function(t) { return t.trim(); }).filter(Boolean) : [];
-      var readTime = estimateReadTime(content);
+      var plainTextContent = stripHTMLTags(content);
+      var readTime = estimateReadTime(plainTextContent);
       var date = formatDate(null);
 
       if (currentEditIndex >= 0 && currentEditIndex < posts.length) {
@@ -489,7 +724,7 @@
         posts[currentEditIndex].title = title;
         posts[currentEditIndex].author = author;
         posts[currentEditIndex].tags = tags;
-        posts[currentEditIndex].excerpt = excerpt || content.substring(0, 200) + '...';
+        posts[currentEditIndex].excerpt = excerpt || stripHTMLTags(content).substring(0, 200) + '...';
         posts[currentEditIndex].content = content;
         posts[currentEditIndex].readTime = readTime;
         // Keep original date unless it's new
@@ -502,16 +737,19 @@
           author: author,
           readTime: readTime,
           tags: tags,
-          excerpt: excerpt || content.substring(0, 200) + '...',
+          excerpt: excerpt || stripHTMLTags(content).substring(0, 200) + '...',
           content: content
         });
       }
 
       savePosts(posts);
-      renderBlogCards();
+      refreshAllViews();
       renderAdminPostList();
       showAdminView('list');
       currentEditIndex = -1;
+
+      // Show persistence note
+      alert('Post saved!\n\nNote: To make this permanent, tell your AI assistant to update the site.');
     });
   }
 
@@ -530,8 +768,91 @@
     var posts = getPosts();
     posts.splice(index, 1);
     savePosts(posts);
-    renderBlogCards();
+    refreshAllViews();
     renderAdminPostList();
   }
+
+  // ========================================
+  // LINKEDIN PUBLISH FLOW
+  // ========================================
+
+  function openLinkedInView(postIndex) {
+    var posts = getPosts();
+    var post = posts[postIndex];
+    if (!post) return;
+
+    var plainExcerpt = stripHTMLTags(post.excerpt || post.content).substring(0, 300);
+    var message = '\uD83D\uDCDD New on Vidhai \u2014 ' + post.title + '\n\n' +
+      plainExcerpt + '\n\n' +
+      'Read the full article \u2192 https://vidhai.co\n\n' +
+      '#AI #Vidhai #TechInsights';
+
+    document.getElementById('linkedin-message').value = message;
+    document.getElementById('linkedin-company').checked = true;
+    document.getElementById('linkedin-personal').checked = true;
+    document.getElementById('linkedin-success').style.display = 'none';
+    document.getElementById('linkedin-success').textContent = '';
+
+    // Store current post index for reference
+    window.__vidhaiLinkedInPostIndex = postIndex;
+
+    showAdminView('linkedin');
+  }
+
+  // LinkedIn Publish button
+  var linkedinPublishBtn = document.getElementById('linkedin-publish-btn');
+  if (linkedinPublishBtn) {
+    linkedinPublishBtn.addEventListener('click', function() {
+      var message = document.getElementById('linkedin-message').value;
+      var postToCompany = document.getElementById('linkedin-company').checked;
+      var postToPersonal = document.getElementById('linkedin-personal').checked;
+
+      // Save draft data to global variable
+      window.__vidhaiLinkedInDraft = {
+        message: message,
+        postToCompany: postToCompany,
+        postToPersonal: postToPersonal,
+        timestamp: new Date().toISOString()
+      };
+
+      // Copy to clipboard
+      navigator.clipboard.writeText(message).then(function() {
+        var successEl = document.getElementById('linkedin-success');
+        successEl.textContent = '\u2705 Message copied! To publish, tell your AI assistant: "publish this to LinkedIn" \u2014 or post directly at linkedin.com';
+        successEl.style.display = 'block';
+      }).catch(function() {
+        // Fallback: select-and-copy
+        var textarea = document.getElementById('linkedin-message');
+        textarea.select();
+        document.execCommand('copy');
+        var successEl = document.getElementById('linkedin-success');
+        successEl.textContent = '\u2705 Message copied! To publish, tell your AI assistant: "publish this to LinkedIn" \u2014 or post directly at linkedin.com';
+        successEl.style.display = 'block';
+      });
+    });
+  }
+
+  // LinkedIn Cancel button
+  var linkedinCancelBtn = document.getElementById('linkedin-cancel-btn');
+  if (linkedinCancelBtn) {
+    linkedinCancelBtn.addEventListener('click', function() {
+      showAdminView('list');
+    });
+  }
+
+  // ========================================
+  // INITIALIZATION
+  // ========================================
+  detectPage();
+
+  loadPosts(function() {
+    if (isBlogPage) {
+      renderTagFilters();
+      renderBlogPage();
+      renderPagination();
+    } else {
+      renderBlogCards();
+    }
+  });
 
 })();
