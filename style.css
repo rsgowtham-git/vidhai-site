@@ -1,6 +1,6 @@
 /* ========================================
    VIDHAI DESIGN SYSTEM
-   Dark editorial theme â€” navy/charcoal + teal accent
+   Dark editorial theme — navy/charcoal + teal accent
    ======================================== */
 
 /* --- Google Fonts --- */
@@ -910,7 +910,7 @@ a:hover {
    ======================================== */
 
 .dot-separator::before {
-  content: 'Â·';
+  content: '·';
   margin: 0 var(--space-1);
 }
 

@@ -1,5 +1,5 @@
 // ========================================
-// VIDHAI — App JS New
+// VIDHAI — App JS
 // ========================================
 
 (function() {
@@ -562,10 +562,19 @@
     adminCloseBtn.addEventListener('click', closeAdmin);
   }
 
-  // Close overlay click
+  // Close overlay click (only on list/password views, NOT editor/linkedin)
   if (adminOverlay) {
     adminOverlay.addEventListener('click', function(e) {
-      if (e.target === adminOverlay) closeAdmin();
+      if (e.target === adminOverlay) {
+        // Check which view is active — don't close if editing
+        var editorView = adminPanel.querySelector('[data-admin-view="editor"]');
+        var linkedinView = adminPanel.querySelector('[data-admin-view="linkedin"]');
+        var isEditing = (editorView && editorView.style.display === 'block');
+        var isLinkedIn = (linkedinView && linkedinView.style.display === 'block');
+        if (!isEditing && !isLinkedIn) {
+          closeAdmin();
+        }
+      }
     });
   }
 
@@ -724,8 +733,14 @@
     // Destroy previous instance if any
     if (quillEditor) {
       quillEditor = null;
-      editorContainer.innerHTML = '';
     }
+    // Remove any existing Quill toolbars and editor content
+    var parentField = editorContainer.parentNode;
+    var existingToolbars = parentField.querySelectorAll('.ql-toolbar');
+    existingToolbars.forEach(function(tb) { tb.remove(); });
+    // Reset the editor container
+    editorContainer.className = '';
+    editorContainer.innerHTML = '';
 
     // Register table module if quill-better-table is available
     var toolbarOptions = [
@@ -852,6 +867,10 @@
                 return;
               }
             }
+            // Clear and paste HTML to preserve tables, lists, and formatting
+            quillEditor.setText('');
+            // Use dangerouslyPasteHTML for lists and text formatting
+            // Then set innerHTML directly to also preserve tables
             quillEditor.root.innerHTML = html;
           }
 
