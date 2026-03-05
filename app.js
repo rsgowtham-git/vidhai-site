@@ -1,5 +1,5 @@
 // ========================================
-// VIDHAI — App JS
+// VIDHAI — App JS New
 // ========================================
 
 (function() {
@@ -780,6 +780,114 @@
       if (formatPainterActive && range && range.length > 0) {
         applyFormatPainter(range);
       }
+    });
+  }
+
+  // --- Import DOCX ---
+  var importDocxBtn = document.getElementById('import-docx-btn');
+  var importDocxInput = document.getElementById('import-docx-input');
+  var importDocxStatus = document.getElementById('import-docx-status');
+
+  if (importDocxBtn && importDocxInput) {
+    importDocxBtn.addEventListener('click', function() {
+      importDocxInput.click();
+    });
+
+    importDocxInput.addEventListener('change', function(e) {
+      var file = e.target.files[0];
+      if (!file) return;
+
+      if (!file.name.toLowerCase().endsWith('.docx')) {
+        if (importDocxStatus) {
+          importDocxStatus.textContent = 'Please select a .docx file.';
+          importDocxStatus.style.color = '#f87171';
+        }
+        return;
+      }
+
+      if (importDocxStatus) {
+        importDocxStatus.textContent = 'Importing...';
+        importDocxStatus.style.color = '#94a3b8';
+      }
+
+      var reader = new FileReader();
+      reader.onload = function(event) {
+        var arrayBuffer = event.target.result;
+
+        if (typeof mammoth === 'undefined') {
+          if (importDocxStatus) {
+            importDocxStatus.textContent = 'Import library not loaded. Please refresh and try again.';
+            importDocxStatus.style.color = '#f87171';
+          }
+          return;
+        }
+
+        mammoth.convertToHtml(
+          { arrayBuffer: arrayBuffer },
+          {
+            styleMap: [
+              "p[style-name='Heading 1'] => h1:fresh",
+              "p[style-name='Heading 2'] => h2:fresh",
+              "p[style-name='Heading 3'] => h3:fresh",
+              "b => strong",
+              "i => em",
+              "u => u",
+              "strike => s"
+            ]
+          }
+        ).then(function(result) {
+          var html = result.value;
+          var warnings = result.messages.filter(function(m) { return m.type === 'warning'; });
+
+          if (quillEditor) {
+            // If editor already has content, ask before replacing
+            var currentContent = quillEditor.getText().trim();
+            if (currentContent.length > 0) {
+              if (!confirm('The editor already has content. Replace it with the imported document?')) {
+                if (importDocxStatus) {
+                  importDocxStatus.textContent = 'Import cancelled.';
+                  importDocxStatus.style.color = '#94a3b8';
+                }
+                importDocxInput.value = '';
+                return;
+              }
+            }
+            quillEditor.root.innerHTML = html;
+          }
+
+          // Try to extract title from filename if title field is empty
+          var titleField = document.getElementById('editor-title');
+          if (titleField && !titleField.value.trim()) {
+            var docTitle = file.name.replace(/\.docx$/i, '').replace(/[-_]/g, ' ');
+            titleField.value = docTitle;
+          }
+
+          if (importDocxStatus) {
+            var warningText = warnings.length > 0 ? ' (' + warnings.length + ' warnings)' : '';
+            importDocxStatus.textContent = '\u2705 Imported: ' + file.name + warningText;
+            importDocxStatus.style.color = '#5eead4';
+          }
+
+          // Reset file input so same file can be re-imported
+          importDocxInput.value = '';
+        }).catch(function(err) {
+          if (importDocxStatus) {
+            importDocxStatus.textContent = 'Import failed: ' + err.message;
+            importDocxStatus.style.color = '#f87171';
+          }
+          importDocxInput.value = '';
+        });
+      };
+
+      reader.onerror = function() {
+        if (importDocxStatus) {
+          importDocxStatus.textContent = 'Could not read file. Please try again.';
+          importDocxStatus.style.color = '#f87171';
+        }
+        importDocxInput.value = '';
+      };
+
+      reader.readAsArrayBuffer(file);
     });
   }
 
