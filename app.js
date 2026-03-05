@@ -366,8 +366,8 @@
     pwForm.addEventListener('submit', function(e) {
       e.preventDefault();
       var pw = document.getElementById('admin-pw-input').value;
-      // Simple password: vidhai2026
-      if (pw === 'vidhai2026') {
+      // Simple password: Grit@Prosperity143
+      if (pw === 'Grit@Prosperity143') {
         setAdminAuthenticated();
         document.getElementById('admin-pw-error').textContent = '';
         showAdminView('list');
