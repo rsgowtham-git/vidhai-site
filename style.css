@@ -1687,6 +1687,107 @@ a:hover {
   background: var(--color-surface-2);
 }
 
+/* DOCX Preview Area */
+.admin-content-preview {
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-md);
+  background: var(--color-surface-1);
+  padding: var(--space-4) var(--space-5);
+  min-height: 300px;
+  max-height: 60vh;
+  overflow-y: auto;
+  color: var(--color-text);
+  font-size: var(--text-sm);
+  line-height: 1.7;
+}
+
+.admin-content-preview p {
+  margin-bottom: var(--space-3);
+}
+
+.admin-content-preview strong {
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.admin-content-preview table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--space-4) 0;
+  font-size: var(--text-sm);
+}
+
+.admin-content-preview table tr:first-child td,
+.admin-content-preview table th {
+  background: var(--color-surface-2);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.admin-content-preview table th,
+.admin-content-preview table td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.admin-content-preview ul,
+.admin-content-preview ol {
+  padding-left: var(--space-5);
+  margin: var(--space-3) 0;
+}
+
+.admin-content-preview li {
+  margin-bottom: var(--space-2);
+}
+
+.admin-content-preview h1,
+.admin-content-preview h2,
+.admin-content-preview h3 {
+  margin: var(--space-4) 0 var(--space-2);
+  color: var(--color-text);
+}
+
+.admin-preview-actions {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-top: var(--space-2);
+}
+
+/* Blog post content — tables & lists */
+.blog-post__content table {
+  border-collapse: collapse;
+  width: 100%;
+  margin: var(--space-4) 0;
+  font-size: var(--text-sm);
+}
+
+.blog-post__content table tr:first-child td,
+.blog-post__content table th {
+  background: var(--color-surface-2);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.blog-post__content table th,
+.blog-post__content table td {
+  border: 1px solid var(--color-border);
+  padding: var(--space-2) var(--space-3);
+  text-align: left;
+}
+
+.blog-post__content ul,
+.blog-post__content ol {
+  padding-left: var(--space-5);
+  margin: var(--space-3) 0;
+}
+
+.blog-post__content li {
+  margin-bottom: var(--space-2);
+  line-height: 1.7;
+}
+
 /* Fix Quill dark theme text highlighting issue */
 /* Reset all Quill default background colors in dark mode */
 .ql-editor {

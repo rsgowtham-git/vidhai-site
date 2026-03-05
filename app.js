@@ -7,6 +7,7 @@
 
   // --- Quill Editor Instance ---
   var quillEditor = null;
+  var docxImportedHTML = null;  // Stores raw HTML from DOCX import (bypasses Quill)
 
   // --- Blog Data (in-memory store, loaded from posts.json) ---
   var memoryPosts = null;
@@ -803,6 +804,53 @@
   var importDocxInput = document.getElementById('import-docx-input');
   var importDocxStatus = document.getElementById('import-docx-status');
 
+  function showDocxPreview(html) {
+    var quillContainer = document.getElementById('editor-content-quill');
+    var previewContainer = document.getElementById('editor-content-preview');
+    var previewActions = document.getElementById('editor-preview-actions');
+    // Hide Quill toolbar + editor
+    if (quillContainer) quillContainer.style.display = 'none';
+    var toolbar = quillContainer ? quillContainer.parentNode.querySelector('.ql-toolbar') : null;
+    if (toolbar) toolbar.style.display = 'none';
+    // Show preview
+    if (previewContainer) {
+      previewContainer.innerHTML = html;
+      previewContainer.style.display = 'block';
+    }
+    if (previewActions) previewActions.style.display = 'flex';
+    docxImportedHTML = html;
+  }
+
+  function hideDocxPreview() {
+    var quillContainer = document.getElementById('editor-content-quill');
+    var previewContainer = document.getElementById('editor-content-preview');
+    var previewActions = document.getElementById('editor-preview-actions');
+    // Show Quill
+    if (quillContainer) quillContainer.style.display = 'block';
+    var toolbar = quillContainer ? quillContainer.parentNode.querySelector('.ql-toolbar') : null;
+    if (toolbar) toolbar.style.display = 'block';
+    // Hide preview
+    if (previewContainer) {
+      previewContainer.style.display = 'none';
+      previewContainer.innerHTML = '';
+    }
+    if (previewActions) previewActions.style.display = 'none';
+    docxImportedHTML = null;
+  }
+
+  // Switch to Quill button
+  var switchToQuillBtn = document.getElementById('editor-switch-to-quill');
+  if (switchToQuillBtn) {
+    switchToQuillBtn.addEventListener('click', function() {
+      if (!confirm('Switching to the rich text editor may lose tables and some formatting. Continue?')) return;
+      var html = docxImportedHTML || '';
+      hideDocxPreview();
+      if (quillEditor) {
+        quillEditor.root.innerHTML = html;
+      }
+    });
+  }
+
   if (importDocxBtn && importDocxInput) {
     importDocxBtn.addEventListener('click', function() {
       importDocxInput.click();
@@ -854,24 +902,38 @@
           var html = result.value;
           var warnings = result.messages.filter(function(m) { return m.type === 'warning'; });
 
-          if (quillEditor) {
-            // If editor already has content, ask before replacing
+          // Check if existing content should be replaced
+          var hasExisting = false;
+          if (docxImportedHTML) {
+            hasExisting = true;
+          } else if (quillEditor) {
             var currentContent = quillEditor.getText().trim();
-            if (currentContent.length > 0) {
-              if (!confirm('The editor already has content. Replace it with the imported document?')) {
-                if (importDocxStatus) {
-                  importDocxStatus.textContent = 'Import cancelled.';
-                  importDocxStatus.style.color = '#94a3b8';
-                }
-                importDocxInput.value = '';
-                return;
+            hasExisting = currentContent.length > 0;
+          }
+
+          if (hasExisting) {
+            if (!confirm('The editor already has content. Replace it with the imported document?')) {
+              if (importDocxStatus) {
+                importDocxStatus.textContent = 'Import cancelled.';
+                importDocxStatus.style.color = '#94a3b8';
               }
+              importDocxInput.value = '';
+              return;
             }
-            // Clear and paste HTML to preserve tables, lists, and formatting
-            quillEditor.setText('');
-            // Use dangerouslyPasteHTML for lists and text formatting
-            // Then set innerHTML directly to also preserve tables
-            quillEditor.root.innerHTML = html;
+          }
+
+          // Check if content has tables or complex HTML that Quill would break
+          var hasComplexContent = /<table|<thead|<tbody/i.test(html);
+          if (hasComplexContent) {
+            // Use preview mode to preserve tables
+            showDocxPreview(html);
+          } else {
+            // Simple content — safe for Quill
+            hideDocxPreview();
+            if (quillEditor) {
+              quillEditor.setText('');
+              quillEditor.root.innerHTML = html;
+            }
           }
 
           // Try to extract title from filename if title field is empty
@@ -939,9 +1001,16 @@
     document.getElementById('admin-editor-title-text').textContent = 'Edit Post';
     showAdminView('editor');
     initQuill();
-    // Load content into Quill
-    if (quillEditor && post.content) {
-      quillEditor.root.innerHTML = post.content;
+
+    // If content has tables, show in preview mode to preserve them
+    var hasComplexContent = /<table|<thead|<tbody/i.test(post.content || '');
+    if (hasComplexContent) {
+      showDocxPreview(post.content);
+    } else {
+      hideDocxPreview();
+      if (quillEditor && post.content) {
+        quillEditor.root.innerHTML = post.content;
+      }
     }
   }
 
@@ -951,6 +1020,7 @@
     document.getElementById('editor-tags').value = '';
     document.getElementById('editor-excerpt').value = '';
     document.getElementById('editor-content').value = '';
+    hideDocxPreview();
     if (quillEditor) {
       quillEditor.root.innerHTML = '';
     }
@@ -979,9 +1049,11 @@
       var tagsStr = document.getElementById('editor-tags').value.trim();
       var excerpt = document.getElementById('editor-excerpt').value.trim();
 
-      // Get content from Quill if available, fallback to textarea
+      // Get content from DOCX preview if active, else from Quill, else from textarea
       var content;
-      if (quillEditor) {
+      if (docxImportedHTML) {
+        content = docxImportedHTML;
+      } else if (quillEditor) {
         content = quillEditor.root.innerHTML.trim();
         // If Quill is empty it may contain just <p><br></p>
         if (content === '<p><br></p>' || content === '') content = '';
@@ -1025,6 +1097,9 @@
       savePosts(posts);
       refreshAllViews();
       renderAdminPostList();
+
+      // Reset DOCX preview state
+      docxImportedHTML = null;
 
       // Determine saved post index for LinkedIn
       var savedPostIndex = (currentEditIndex >= 0) ? currentEditIndex : 0;
