@@ -1,6 +1,6 @@
 /* ========================================
    VIDHAI DESIGN SYSTEM
-   Dark editorial theme — navy/charcoal + teal accent
+   Dark editorial theme â€” navy/charcoal + teal accent
    ======================================== */
 
 /* --- Google Fonts --- */
@@ -910,7 +910,7 @@ a:hover {
    ======================================== */
 
 .dot-separator::before {
-  content: '·';
+  content: 'Â·';
   margin: 0 var(--space-1);
 }
 
@@ -1626,6 +1626,36 @@ a:hover {
 /* Insert Table button */
 .ql-toolbar.ql-snow button.ql-insert-table {
   cursor: pointer;
+}
+
+/* Import DOCX row */
+.admin-import-row {
+  display: flex;
+  align-items: center;
+  gap: var(--space-3);
+  margin-bottom: var(--space-2);
+}
+
+.admin-btn--import {
+  display: inline-flex;
+  align-items: center;
+  gap: 6px;
+  background: var(--color-surface-2);
+  border: 1px dashed var(--color-border);
+  color: var(--color-text-secondary);
+  cursor: pointer;
+  transition: all 0.18s ease;
+}
+
+.admin-btn--import:hover {
+  border-color: var(--color-primary);
+  color: var(--color-primary);
+  background: rgba(94, 234, 212, 0.05);
+}
+
+.admin-import-hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-tertiary);
 }
 
 /* Table styles inside Quill editor */
