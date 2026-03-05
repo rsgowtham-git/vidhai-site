@@ -9,9 +9,10 @@
   var quillEditor = null;
   var docxImportedHTML = null;  // Stores raw HTML from DOCX import (bypasses Quill)
 
-  // --- Blog Data (in-memory store, loaded from posts.json) ---
+  // --- Blog Data (loaded from API, falls back to posts.json) ---
   var memoryPosts = null;
   var postsLoaded = false;
+  var useAPI = true;  // Use database API for persistence
 
   // --- Blog Page State ---
   var POSTS_PER_PAGE = 6;
@@ -25,24 +26,40 @@
     isBlogPage = !!document.getElementById('blog-page-container');
   }
 
-  // --- Load Posts from posts.json ---
+  // --- Load Posts from API (with fallback to posts.json) ---
   function loadPosts(callback) {
     if (postsLoaded && memoryPosts) {
       callback(memoryPosts);
       return;
     }
-    fetch('./posts.json')
-      .then(function(r) { return r.json(); })
+    // Try API first
+    fetch('./api/posts')
+      .then(function(r) {
+        if (!r.ok) throw new Error('API returned ' + r.status);
+        return r.json();
+      })
       .then(function(data) {
         memoryPosts = data;
         postsLoaded = true;
+        useAPI = true;
         callback(memoryPosts);
       })
-      .catch(function(err) {
-        console.warn('Could not load posts.json, using empty array:', err);
-        memoryPosts = [];
-        postsLoaded = true;
-        callback(memoryPosts);
+      .catch(function() {
+        // Fallback to posts.json
+        useAPI = false;
+        fetch('./posts.json')
+          .then(function(r) { return r.json(); })
+          .then(function(data) {
+            memoryPosts = data;
+            postsLoaded = true;
+            callback(memoryPosts);
+          })
+          .catch(function(err) {
+            console.warn('Could not load posts:', err);
+            memoryPosts = [];
+            postsLoaded = true;
+            callback(memoryPosts);
+          });
       });
   }
 
@@ -289,7 +306,9 @@
   // --- Theme Toggle ---
   var toggle = document.querySelector('[data-theme-toggle]');
   var root = document.documentElement;
-  var theme = 'dark';
+  // Auto-detect system preference
+  var prefersDark = window.matchMedia && window.matchMedia('(prefers-color-scheme: dark)').matches;
+  var theme = prefersDark ? 'dark' : 'light';
   root.setAttribute('data-theme', theme);
 
   function updateToggleIcon() {
@@ -1070,47 +1089,96 @@
       var plainTextContent = stripHTMLTags(content);
       var readTime = estimateReadTime(plainTextContent);
       var date = formatDate(null);
+      var excerptFinal = excerpt || stripHTMLTags(content).substring(0, 200) + '...';
 
-      if (currentEditIndex >= 0 && currentEditIndex < posts.length) {
-        // Update existing
-        posts[currentEditIndex].title = title;
-        posts[currentEditIndex].author = author;
-        posts[currentEditIndex].tags = tags;
-        posts[currentEditIndex].excerpt = excerpt || stripHTMLTags(content).substring(0, 200) + '...';
-        posts[currentEditIndex].content = content;
-        posts[currentEditIndex].readTime = readTime;
-        // Keep original date unless it's new
-      } else {
-        // New post — add to beginning
-        posts.unshift({
-          id: generateId(),
+      // Disable save button during API call
+      var saveBtn = editorForm.querySelector('button[type="submit"]');
+      if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+
+      if (useAPI) {
+        // --- API-backed save ---
+        var isEditing = (currentEditIndex >= 0 && currentEditIndex < posts.length);
+        var apiMethod = isEditing ? 'PUT' : 'POST';
+        var apiBody = {
           title: title,
-          date: date,
           author: author,
-          readTime: readTime,
           tags: tags,
-          excerpt: excerpt || stripHTMLTags(content).substring(0, 200) + '...',
-          content: content
+          excerpt: excerptFinal,
+          content: content,
+          readTime: readTime,
+          date: date
+        };
+        if (isEditing) {
+          apiBody.id = posts[currentEditIndex].id;
+        }
+
+        fetch('./api/posts', {
+          method: apiMethod,
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify(apiBody)
+        })
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Post'; }
+          if (data.error) {
+            alert('Error saving: ' + data.error);
+            return;
+          }
+          // Refresh posts from API
+          postsLoaded = false;
+          loadPosts(function() {
+            refreshAllViews();
+            renderAdminPostList();
+            docxImportedHTML = null;
+            var savedPostIndex = isEditing ? currentEditIndex : 0;
+            currentEditIndex = -1;
+            var doLinkedIn = confirm('Post saved to database!\n\nWould you like to post this to LinkedIn?');
+            if (doLinkedIn) {
+              openLinkedInView(savedPostIndex);
+            } else {
+              showAdminView('list');
+            }
+          });
+        })
+        .catch(function(err) {
+          if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Post'; }
+          alert('Failed to save: ' + err.message);
         });
-      }
 
-      savePosts(posts);
-      refreshAllViews();
-      renderAdminPostList();
-
-      // Reset DOCX preview state
-      docxImportedHTML = null;
-
-      // Determine saved post index for LinkedIn
-      var savedPostIndex = (currentEditIndex >= 0) ? currentEditIndex : 0;
-      currentEditIndex = -1;
-
-      // After save, prompt for LinkedIn
-      var doLinkedIn = confirm('Post saved!\n\nWould you like to post this to LinkedIn?\n\n(To make this blog post permanent, tell your AI assistant to update the site.)');
-      if (doLinkedIn) {
-        openLinkedInView(savedPostIndex);
       } else {
-        showAdminView('list');
+        // --- In-memory fallback ---
+        if (currentEditIndex >= 0 && currentEditIndex < posts.length) {
+          posts[currentEditIndex].title = title;
+          posts[currentEditIndex].author = author;
+          posts[currentEditIndex].tags = tags;
+          posts[currentEditIndex].excerpt = excerptFinal;
+          posts[currentEditIndex].content = content;
+          posts[currentEditIndex].readTime = readTime;
+        } else {
+          posts.unshift({
+            id: generateId(),
+            title: title,
+            date: date,
+            author: author,
+            readTime: readTime,
+            tags: tags,
+            excerpt: excerptFinal,
+            content: content
+          });
+        }
+        savePosts(posts);
+        refreshAllViews();
+        renderAdminPostList();
+        docxImportedHTML = null;
+        if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save Post'; }
+        var savedPostIdx = (currentEditIndex >= 0) ? currentEditIndex : 0;
+        currentEditIndex = -1;
+        var doLinkedIn2 = confirm('Post saved!\n\nWould you like to post this to LinkedIn?\n\n(Note: Posts will be lost on refresh. Database not connected.)');
+        if (doLinkedIn2) {
+          openLinkedInView(savedPostIdx);
+        } else {
+          showAdminView('list');
+        }
       }
     });
   }
@@ -1128,10 +1196,36 @@
   function deletePost(index) {
     if (!confirm('Are you sure you want to delete this post?')) return;
     var posts = getPosts();
-    posts.splice(index, 1);
-    savePosts(posts);
-    refreshAllViews();
-    renderAdminPostList();
+    var post = posts[index];
+    if (!post) return;
+
+    if (useAPI && post.id) {
+      // Delete from database
+      fetch('./api/posts?id=' + encodeURIComponent(post.id), {
+        method: 'DELETE'
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (data.error) {
+          alert('Error deleting: ' + data.error);
+          return;
+        }
+        postsLoaded = false;
+        loadPosts(function() {
+          refreshAllViews();
+          renderAdminPostList();
+        });
+      })
+      .catch(function(err) {
+        alert('Failed to delete: ' + err.message);
+      });
+    } else {
+      // In-memory fallback
+      posts.splice(index, 1);
+      savePosts(posts);
+      refreshAllViews();
+      renderAdminPostList();
+    }
   }
 
   // ========================================
