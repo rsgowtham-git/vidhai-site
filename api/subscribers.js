@@ -1,0 +1,216 @@
+// ============================================
+// VIDHAI — Subscribers API (Vercel Serverless)
+// Handles: subscribe, unsubscribe, list subscribers
+// ============================================
+
+const SUPABASE_URL = process.env.SUPABASE_URL;
+const SUPABASE_KEY = process.env.SUPABASE_KEY;
+
+async function supabaseFetch(path, options = {}) {
+  const url = `${SUPABASE_URL}/rest/v1/${path}`;
+  const res = await fetch(url, {
+    ...options,
+    headers: {
+      'apikey': SUPABASE_KEY,
+      'Authorization': `Bearer ${SUPABASE_KEY}`,
+      'Content-Type': 'application/json',
+      'Prefer': options.prefer || 'return=representation',
+      ...(options.headers || {})
+    }
+  });
+  const text = await res.text();
+  try {
+    return { status: res.status, data: JSON.parse(text) };
+  } catch {
+    return { status: res.status, data: text };
+  }
+}
+
+module.exports = async function handler(req, res) {
+  // CORS
+  res.setHeader('Access-Control-Allow-Origin', '*');
+  res.setHeader('Access-Control-Allow-Methods', 'GET, POST, PUT, DELETE, OPTIONS');
+  res.setHeader('Access-Control-Allow-Headers', 'Content-Type');
+  if (req.method === 'OPTIONS') return res.status(200).end();
+
+  try {
+    // ---- POST: Subscribe ----
+    if (req.method === 'POST') {
+      const { email, frequency } = req.body || {};
+      if (!email || !email.includes('@')) {
+        return res.status(400).json({ error: 'Valid email is required.' });
+      }
+
+      const freq = (frequency === 'monthly') ? 'monthly' : 'weekly';
+
+      // Check if already exists
+      const existing = await supabaseFetch(`subscribers?email=eq.${encodeURIComponent(email)}&select=id,status`);
+      
+      if (existing.data && existing.data.length > 0) {
+        const sub = existing.data[0];
+        if (sub.status === 'active') {
+          return res.status(200).json({ success: true, message: 'Already subscribed!' });
+        }
+        // Re-subscribe
+        const update = await supabaseFetch(`subscribers?id=eq.${sub.id}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: 'active', frequency: freq, unsubscribed_at: null })
+        });
+        return res.status(200).json({ success: true, message: 'Welcome back! Re-subscribed successfully.' });
+      }
+
+      // New subscriber
+      const insert = await supabaseFetch('subscribers', {
+        method: 'POST',
+        body: JSON.stringify({
+          email: email.toLowerCase().trim(),
+          frequency: freq,
+          status: 'active',
+          ip_address: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || null,
+          user_agent: req.headers['user-agent'] || null
+        })
+      });
+
+      if (insert.status >= 400) {
+        return res.status(500).json({ error: 'Failed to subscribe. Please try again.' });
+      }
+
+      // Send welcome email via Resend (if configured)
+      const RESEND_API_KEY = process.env.RESEND_API_KEY;
+      if (RESEND_API_KEY) {
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${RESEND_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: 'Vidhai <newsletter@vidhai.co>',
+              to: [email.toLowerCase().trim()],
+              subject: 'Welcome to Vidhai — AI Takes Root 🌱',
+              html: getWelcomeEmailHTML(email)
+            })
+          });
+        } catch (emailErr) {
+          console.error('Welcome email failed:', emailErr);
+          // Don't fail the subscription if email fails
+        }
+      }
+
+      // Notify admin via Resend
+      if (RESEND_API_KEY) {
+        try {
+          await fetch('https://api.resend.com/emails', {
+            method: 'POST',
+            headers: {
+              'Authorization': `Bearer ${RESEND_API_KEY}`,
+              'Content-Type': 'application/json'
+            },
+            body: JSON.stringify({
+              from: 'Vidhai <newsletter@vidhai.co>',
+              to: ['rsgowtham@gmail.com'],
+              subject: `🔔 New Vidhai Subscriber: ${email}`,
+              html: `<p>New subscriber: <strong>${email}</strong></p><p>Frequency: ${freq}</p><p>Time: ${new Date().toISOString()}</p>`
+            })
+          });
+        } catch (notifyErr) {
+          console.error('Admin notification failed:', notifyErr);
+        }
+      }
+
+      return res.status(200).json({ success: true, message: 'Subscribed successfully!' });
+    }
+
+    // ---- GET: List subscribers (admin) or handle unsubscribe page ----
+    if (req.method === 'GET') {
+      const { action, email, token } = req.query || {};
+
+      // Unsubscribe via link
+      if (action === 'unsubscribe' && email) {
+        const update = await supabaseFetch(`subscribers?email=eq.${encodeURIComponent(email.toLowerCase().trim())}`, {
+          method: 'PATCH',
+          body: JSON.stringify({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString() })
+        });
+
+        // Return a simple HTML page confirming unsubscribe
+        res.setHeader('Content-Type', 'text/html');
+        return res.status(200).send(`
+          <!DOCTYPE html>
+          <html><head><title>Unsubscribed — Vidhai</title>
+          <style>body{font-family:-apple-system,system-ui,sans-serif;display:flex;justify-content:center;align-items:center;min-height:100vh;margin:0;background:#0d1117;color:#e6edf3;}
+          .card{text-align:center;padding:3rem;border-radius:12px;background:#161b22;border:1px solid #30363d;max-width:400px;}
+          h1{font-size:1.5rem;margin-bottom:1rem;}p{color:#8b949e;line-height:1.6;}
+          a{color:#58a6ff;text-decoration:none;}</style></head>
+          <body><div class="card">
+          <h1>Unsubscribed</h1>
+          <p>You have been unsubscribed from the Vidhai newsletter. We're sorry to see you go.</p>
+          <p style="margin-top:1.5rem"><a href="https://vidhai.co">← Back to Vidhai</a></p>
+          </div></body></html>
+        `);
+      }
+
+      // Admin: list all subscribers
+      const result = await supabaseFetch('subscribers?select=*&order=subscribed_at.desc');
+      return res.status(200).json(result.data || []);
+    }
+
+    // ---- DELETE: Remove subscriber ----
+    if (req.method === 'DELETE') {
+      const { id } = req.query || {};
+      if (!id) return res.status(400).json({ error: 'Subscriber ID required.' });
+      
+      await supabaseFetch(`subscribers?id=eq.${id}`, { method: 'DELETE' });
+      return res.status(200).json({ success: true });
+    }
+
+    return res.status(405).json({ error: 'Method not allowed' });
+
+  } catch (err) {
+    console.error('Subscribers API error:', err);
+    return res.status(500).json({ error: err.message || 'Internal server error' });
+  }
+};
+
+function getWelcomeEmailHTML(email) {
+  const unsubUrl = `https://vidhai.co/api/subscribers?action=unsubscribe&email=${encodeURIComponent(email)}`;
+  return `
+<!DOCTYPE html>
+<html>
+<head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
+<body style="margin:0;padding:0;background:#f8f9ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
+<div style="max-width:560px;margin:0 auto;padding:40px 20px;">
+  <div style="background:#ffffff;border-radius:12px;padding:40px 32px;border:1px solid #e2e8f0;">
+    <div style="text-align:center;margin-bottom:32px;">
+      <h1 style="font-size:24px;color:#0f172a;margin:0 0 8px 0;">Welcome to Vidhai 🌱</h1>
+      <p style="color:#64748b;font-size:14px;margin:0;">AI Takes Root</p>
+    </div>
+    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 16px 0;">
+      Thank you for subscribing to the Vidhai newsletter. You will receive curated AI and semiconductor industry insights directly in your inbox.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 16px 0;">
+      Here is what you can expect:
+    </p>
+    <ul style="color:#334155;font-size:15px;line-height:1.9;margin:0 0 24px 0;padding-left:20px;">
+      <li>Latest AI news and model releases</li>
+      <li>Semiconductor industry updates</li>
+      <li>Curated video recommendations</li>
+      <li>Original analysis and insights</li>
+    </ul>
+    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 24px 0;">
+      In the meantime, visit <a href="https://vidhai.co" style="color:#0ea5e9;text-decoration:none;font-weight:500;">vidhai.co</a> to explore the latest articles.
+    </p>
+    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0;">
+      — Team Vidhai
+    </p>
+  </div>
+  <div style="text-align:center;margin-top:24px;">
+    <p style="color:#94a3b8;font-size:12px;margin:0;">
+      <a href="${unsubUrl}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> · 
+      <a href="https://vidhai.co" style="color:#94a3b8;text-decoration:underline;">vidhai.co</a>
+    </p>
+  </div>
+</div>
+</body>
+</html>`;
+}
