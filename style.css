@@ -3495,6 +3495,11 @@ a:hover {
   animation: priceFlash 1.5s ease-out;
 }
 
+.invest-pe {
+  color: var(--color-text-muted);
+  font-variant-numeric: tabular-nums;
+}
+
 /* --- IPO Status Badges --- */
 .invest-status {
   display: inline-block;

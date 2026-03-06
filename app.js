@@ -2372,6 +2372,7 @@
       '<td class="invest-price">$' + escapeHTML(String(item.price)) + '</td>' +
       '<td class="invest-change ' + changeClass + '">' + changeSign + escapeHTML(String(item.change)) + '</td>' +
       '<td class="invest-changepct ' + changeClass + '">' + pctSign + escapeHTML(String(item.change_percent)) + '%</td>' +
+      '<td class="invest-pe">' + (item.pe_ratio != null ? escapeHTML(String(item.pe_ratio)) : '—') + '</td>' +
       '<td class="invest-mcap">' + escapeHTML(item.market_cap || '') + '</td>' +
       '<td><span class="invest-badge ' + getCategoryBadgeClass(item.category) + '">' + escapeHTML(item.category || '') + '</span></td>' +
     '</tr>';
@@ -2420,6 +2421,11 @@
           if (mcapCell && live.market_cap) {
             mcapCell.textContent = live.market_cap;
           }
+
+          var peCell = row.querySelector('.invest-pe');
+          if (peCell && live.pe_ratio != null) {
+            peCell.textContent = live.pe_ratio.toFixed(2);
+          }
         });
 
         // Update the timestamp
@@ -2439,7 +2445,7 @@
 
     fetchContent('market_movers').then(function(items) {
       if (!items || !items.length) {
-        tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">No market movers data yet.</td></tr>';
+        tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">No market movers data yet.</td></tr>';
         return;
       }
       tbody.innerHTML = items.map(buildMoverRow).join('');
@@ -2447,7 +2453,7 @@
       // Fetch live prices to overlay on top of DB values
       fetchLivePrices(items);
     }).catch(function() {
-      tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Could not load market movers.</td></tr>';
+      tbody.innerHTML = '<tr><td colspan="8" class="admin-empty">Could not load market movers.</td></tr>';
     });
   }
 
