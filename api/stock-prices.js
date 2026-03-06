@@ -58,6 +58,7 @@ export default async function handler(req, res) {
         change: q.regularMarketChange != null ? parseFloat(q.regularMarketChange.toFixed(2)) : null,
         change_percent: q.regularMarketChangePercent != null ? parseFloat(q.regularMarketChangePercent.toFixed(2)) : null,
         market_cap: formatMarketCap(q.marketCap),
+        pe_ratio: q.trailingPE != null ? parseFloat(q.trailingPE.toFixed(2)) : null,
         prev_close: q.regularMarketPreviousClose || null,
         market_state: q.marketState || null
       };
