@@ -1329,26 +1329,7 @@
   // ========================================
 
   var adminTabsContainer = document.getElementById('admin-tabs');
-  if (adminTabsContainer) {
-    var tabButtons = adminTabsContainer.querySelectorAll('[data-admin-tab]');
-    tabButtons.forEach(function(tabBtn) {
-      tabBtn.addEventListener('click', function() {
-        var target = tabBtn.getAttribute('data-admin-tab');
-        tabButtons.forEach(function(b) { b.classList.remove('active'); });
-        tabBtn.classList.add('active');
-
-        if (target === 'posts') {
-          showAdminView('list');
-          renderAdminPostList();
-        } else if (target === 'subscribers') {
-          showAdminView('subscribers');
-          renderSubscriberList();
-        } else if (target === 'newsletter') {
-          showAdminView('newsletter');
-        }
-      });
-    });
-  }
+  // Tab click handlers are bound in the content management section below
 
   // Show admin tabs when authenticated
   var origSetAdminAuth = setAdminAuthenticated;
@@ -2041,5 +2022,686 @@
       renderBlogCards();
     }
   });
+
+
+  // ========================================
+  // CONTENT MANAGEMENT SYSTEM
+  // ========================================
+
+  var CONTENT_API = '/api/content';
+
+  // --- Content API Helpers ---
+  function fetchContent(table, includeInactive) {
+    var url = CONTENT_API + '?table=' + encodeURIComponent(table);
+    if (includeInactive) url += '&active=false';
+    return fetch(url).then(function(r) {
+      if (!r.ok) throw new Error('API returned ' + r.status);
+      return r.json();
+    });
+  }
+
+  function saveContent(table, data) {
+    var method = data.id ? 'PUT' : 'POST';
+    var body = Object.assign({}, data, { table: table });
+    return fetch(CONTENT_API, {
+      method: method,
+      headers: { 'Content-Type': 'application/json' },
+      body: JSON.stringify(body)
+    }).then(function(r) { return r.json(); });
+  }
+
+  function deleteContent(table, id) {
+    return fetch(CONTENT_API + '?table=' + encodeURIComponent(table) + '&id=' + encodeURIComponent(id), {
+      method: 'DELETE'
+    }).then(function(r) { return r.json(); });
+  }
+
+  // --- SVG Icon for source links (reusable) ---
+  var sourceLinkSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>';
+
+  // --- Badge class mapping ---
+  function getBadgeClass(badge) {
+    var b = (badge || '').toLowerCase();
+    if (b.indexOf('model') >= 0 || b.indexOf('release') >= 0 || b.indexOf('edge') >= 0 || b.indexOf('innovation') >= 0) return 'badge--model';
+    if (b.indexOf('hardware') >= 0 || b.indexOf('supply') >= 0 || b.indexOf('invest') >= 0) return 'badge--hardware';
+    if (b.indexOf('research') >= 0 || b.indexOf('processor') >= 0) return 'badge--research';
+    if (b.indexOf('product') >= 0 || b.indexOf('deal') >= 0) return 'badge--product';
+    return 'badge--model';
+  }
+
+  // --- Industry Impact SVG Icon Mapping ---
+  var industryIconMap = {
+    healthcare: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>',
+    pharmaceutical_manufacturing: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/><circle cx="16" cy="16" r="4.5"/><path d="M18.5 13.5v5h-5"/></svg>',
+    automotive_mobility: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h2l2-4h6l2 4h2"/><circle cx="7.5" cy="17" r="2.5"/><circle cx="16.5" cy="17" r="2.5"/><path d="M3 9h18"/><path d="M5 9l2-5h10l2 5"/></svg>',
+    'manufacturing_industry_4.0': '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20V8l4-4h6l4 4v12"/><path d="M9 20v-4h6v4"/><path d="M9 12h.01"/><path d="M15 12h.01"/></svg>',
+    semiconductors: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>',
+    enterprise_software: '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>'
+  };
+
+  var defaultIndustryIcon = '<svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>';
+
+  function getIndustryIcon(iconName) {
+    return industryIconMap[iconName] || defaultIndustryIcon;
+  }
+
+  // ========================================
+  // RENDER FUNCTIONS (Public Site)
+  // ========================================
+
+  function renderAINews() {
+    var container = document.getElementById('news-cards');
+    if (!container) return;
+    fetchContent('ai_news').then(function(items) {
+      if (!items || !items.length) {
+        container.innerHTML = '<p class="admin-empty">No AI news items yet.</p>';
+        return;
+      }
+      container.innerHTML = items.map(function(item) {
+        return '<article class="card">' +
+          '<div class="card__meta">' +
+            '<span class="badge ' + getBadgeClass(item.badge) + '">' + escapeHTML(item.badge) + '</span>' +
+            (item.date_display ? '<span class="card__date">' + escapeHTML(item.date_display) + '</span>' : '') +
+          '</div>' +
+          '<h3 class="card__title">' + escapeHTML(item.title) + '</h3>' +
+          '<p class="card__summary">' + escapeHTML(item.summary) + '</p>' +
+          '<div class="card__source">' + sourceLinkSVG +
+            '<a href="' + escapeHTML(item.source_url || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(item.source_name || 'Source') + '</a>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+      // Re-trigger reveal
+      container.classList.remove('is-visible');
+      requestAnimationFrame(function() { container.classList.add('is-visible'); });
+    }).catch(function() {
+      container.innerHTML = '<p class="admin-empty">Could not load news.</p>';
+    });
+  }
+
+  function renderSemiNews() {
+    var container = document.getElementById('semi-cards');
+    if (!container) return;
+    fetchContent('semiconductor_news').then(function(items) {
+      if (!items || !items.length) {
+        container.innerHTML = '<p class="admin-empty">No semiconductor news yet.</p>';
+        return;
+      }
+      container.innerHTML = items.map(function(item) {
+        return '<article class="card">' +
+          '<div class="card__meta">' +
+            '<span class="badge ' + getBadgeClass(item.badge) + '">' + escapeHTML(item.badge) + '</span>' +
+            (item.date_display ? '<span class="card__date">' + escapeHTML(item.date_display) + '</span>' : '') +
+          '</div>' +
+          '<h3 class="card__title">' + escapeHTML(item.title) + '</h3>' +
+          '<p class="card__summary">' + escapeHTML(item.summary) + '</p>' +
+          '<div class="card__source">' + sourceLinkSVG +
+            '<a href="' + escapeHTML(item.source_url || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(item.source_name || 'Source') + '</a>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+      container.classList.remove('is-visible');
+      requestAnimationFrame(function() { container.classList.add('is-visible'); });
+    }).catch(function() {
+      container.innerHTML = '<p class="admin-empty">Could not load semiconductor news.</p>';
+    });
+  }
+
+  // Course card detail SVGs
+  var clockSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>';
+  var capSVG = '<svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>';
+
+  function buildCourseCard(item) {
+    var priceText = item.is_free ? (item.price || 'Free') : (item.price || 'Paid');
+    return '<article class="course-card">' +
+      '<span class="course-card__provider">' + escapeHTML(item.provider) + '</span>' +
+      '<h3 class="course-card__title">' + escapeHTML(item.title) + '</h3>' +
+      '<p class="course-card__desc">' + escapeHTML(item.description) + '</p>' +
+      '<div class="course-card__details">' +
+        '<span class="course-card__detail">' + clockSVG + ' ' + escapeHTML(item.duration || '') + '</span>' +
+        '<span class="course-card__detail">' + capSVG + ' ' + escapeHTML(item.level || '') + '</span>' +
+      '</div>' +
+      '<div class="course-card__footer">' +
+        '<span class="course-card__price">' + escapeHTML(priceText) + '</span>' +
+        '<a href="' + escapeHTML(item.enroll_url || '#') + '" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll &rarr;</a>' +
+      '</div>' +
+    '</article>';
+  }
+
+  function renderTrainingCourses() {
+    var freeContainer = document.getElementById('free-course-cards');
+    var paidContainer = document.getElementById('paid-course-cards');
+    if (!freeContainer && !paidContainer) return;
+
+    fetchContent('training_courses').then(function(items) {
+      var freeItems = items.filter(function(c) { return c.is_free; });
+      var paidItems = items.filter(function(c) { return !c.is_free; });
+
+      if (freeContainer) {
+        freeContainer.innerHTML = freeItems.length ?
+          freeItems.map(buildCourseCard).join('') :
+          '<p class="admin-empty">No free courses yet.</p>';
+        freeContainer.classList.remove('is-visible');
+        requestAnimationFrame(function() { freeContainer.classList.add('is-visible'); });
+      }
+      if (paidContainer) {
+        paidContainer.innerHTML = paidItems.length ?
+          paidItems.map(buildCourseCard).join('') :
+          '<p class="admin-empty">No paid courses yet.</p>';
+      }
+    }).catch(function() {
+      if (freeContainer) freeContainer.innerHTML = '<p class="admin-empty">Could not load courses.</p>';
+      if (paidContainer) paidContainer.innerHTML = '<p class="admin-empty">Could not load courses.</p>';
+    });
+  }
+
+  function renderIndustryImpact() {
+    var container = document.getElementById('industry-cards');
+    if (!container) return;
+
+    fetchContent('industry_impact').then(function(items) {
+      if (!items || !items.length) {
+        container.innerHTML = '<p class="admin-empty">No industry items yet.</p>';
+        return;
+      }
+      container.innerHTML = items.map(function(item) {
+        return '<article class="industry-card">' +
+          '<div class="industry-card__icon">' + getIndustryIcon(item.icon_name) + '</div>' +
+          '<h3 class="industry-card__title">' + escapeHTML(item.title) + '</h3>' +
+          '<p class="industry-card__summary">' + escapeHTML(item.summary) + '</p>' +
+          '<div class="industry-card__source">Source: ' +
+            '<a href="' + escapeHTML(item.source_url || '#') + '" target="_blank" rel="noopener noreferrer">' + escapeHTML(item.source_name || 'Source') + '</a>' +
+          '</div>' +
+        '</article>';
+      }).join('');
+      container.classList.remove('is-visible');
+      requestAnimationFrame(function() { container.classList.add('is-visible'); });
+    }).catch(function() {
+      container.innerHTML = '<p class="admin-empty">Could not load industry data.</p>';
+    });
+  }
+
+  // MeetPilot featured tool SVG logo
+  var meetPilotLogo = '<svg class="tool-featured__logo" width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg"><rect width="32" height="32" rx="8" fill="rgba(0,196,204,0.1)" stroke="rgba(0,196,204,0.2)" stroke-width="1"/><path d="M7 16 Q10.5 10 14 16 Q17.5 22 21 16 Q23.5 11.5 25 16" stroke="#00C4CC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/><circle cx="16" cy="16" r="2.5" fill="rgba(0,196,204,0.3)" stroke="#00C4CC" stroke-width="1.25"/></svg>';
+
+  function buildFeaturedToolHTML(tool) {
+    var featuresArr = tool.features || [];
+    var featureIcons = [
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12 Q10 8 12 12 Q14 16 16 12"/></svg>',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>',
+      '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>'
+    ];
+
+    var featuresHTML = featuresArr.map(function(f, i) {
+      return '<div class="tool-featured__feature">' +
+        (featureIcons[i % featureIcons.length]) +
+        '<span>' + escapeHTML(f) + '</span>' +
+      '</div>';
+    }).join('');
+
+    var actionsHTML = '';
+    if (tool.launch_url) {
+      actionsHTML += '<a href="' + escapeHTML(tool.launch_url) + '" target="_blank" rel="noopener noreferrer" class="tool-featured__btn tool-featured__btn--primary">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg> Launch Web App</a>';
+    }
+    if (tool.mobile_url) {
+      actionsHTML += '<a href="' + escapeHTML(tool.mobile_url) + '" target="_blank" rel="noopener noreferrer" class="tool-featured__btn tool-featured__btn--secondary">' +
+        '<svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg> Launch Mobile App</a>';
+    }
+
+    return '<div class="tool-featured reveal">' +
+      '<div class="tool-featured__header">' + meetPilotLogo +
+        '<div><h3 class="tool-featured__name">' + escapeHTML(tool.name) + '</h3>' +
+        '<p class="tool-featured__tagline">' + escapeHTML(tool.tagline || '') + '</p></div>' +
+        '<span class="badge badge--live">Live</span>' +
+      '</div>' +
+      '<p class="tool-featured__desc">' + escapeHTML(tool.description || '') + '</p>' +
+      (featuresHTML ? '<div class="tool-featured__features">' + featuresHTML + '</div>' : '') +
+      (actionsHTML ? '<div class="tool-featured__actions">' + actionsHTML + '</div>' : '') +
+    '</div>';
+  }
+
+  // Tool card icon SVGs by tags
+  var toolIconSVGs = {
+    'Vision AI': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>',
+    'NLP': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>',
+    'Recommender': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>',
+    'default': '<svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="10"/><path d="M12 6v6l4 2"/></svg>'
+  };
+
+  function getToolIcon(tags) {
+    if (!tags || !tags.length) return toolIconSVGs['default'];
+    for (var i = 0; i < tags.length; i++) {
+      if (toolIconSVGs[tags[i]]) return toolIconSVGs[tags[i]];
+    }
+    return toolIconSVGs['default'];
+  }
+
+  function renderAITools() {
+    var featuredContainer = document.getElementById('tools-featured');
+    var upcomingContainer = document.getElementById('tools-upcoming');
+    var upcomingLabel = document.getElementById('tools-upcoming-label');
+    if (!featuredContainer && !upcomingContainer) return;
+
+    fetchContent('ai_tools').then(function(items) {
+      var liveTools = items.filter(function(t) { return t.status === 'live'; });
+      var comingTools = items.filter(function(t) { return t.status === 'coming_soon'; });
+
+      if (featuredContainer) {
+        featuredContainer.innerHTML = liveTools.map(buildFeaturedToolHTML).join('');
+      }
+
+      if (upcomingContainer) {
+        if (comingTools.length > 0) {
+          if (upcomingLabel) upcomingLabel.style.display = '';
+          upcomingContainer.innerHTML = comingTools.map(function(tool) {
+            var tagsHTML = (tool.tags || []).map(function(t) {
+              return '<span class="badge badge--tag">' + escapeHTML(t) + '</span>';
+            }).join('');
+            return '<article class="tool-card tool-card--teaser">' +
+              '<div class="tool-card__badge"><span class="badge badge--coming-soon">Coming Soon</span></div>' +
+              '<div class="tool-card__icon">' + getToolIcon(tool.tags) + '</div>' +
+              '<h3 class="tool-card__title">' + escapeHTML(tool.name) + '</h3>' +
+              '<p class="tool-card__desc">' + escapeHTML(tool.description || '') + '</p>' +
+              '<div class="tool-card__tags">' + tagsHTML + '</div>' +
+              '<div class="tool-card__teaser">' +
+                '<span class="tool-card__teaser-text">' + (tool.preview_date ? 'Preview coming ' + escapeHTML(tool.preview_date) : 'Coming Soon') + '</span>' +
+              '</div>' +
+            '</article>';
+          }).join('');
+          upcomingContainer.classList.remove('is-visible');
+          requestAnimationFrame(function() { upcomingContainer.classList.add('is-visible'); });
+        } else {
+          if (upcomingLabel) upcomingLabel.style.display = 'none';
+          upcomingContainer.innerHTML = '';
+        }
+      }
+    }).catch(function() {
+      if (featuredContainer) featuredContainer.innerHTML = '<p class="admin-empty">Could not load tools.</p>';
+    });
+  }
+
+  function renderBreakingNews() {
+    var scrollEl = document.getElementById('breaking-news-scroll');
+    if (!scrollEl) return;
+
+    fetchContent('breaking_news').then(function(items) {
+      if (!items || !items.length) {
+        scrollEl.innerHTML = '<span class="breaking-news__item">No breaking news at this time.</span>';
+        return;
+      }
+      // Build items HTML then duplicate for seamless loop
+      var itemsHTML = items.map(function(item) {
+        return '<a href="' + escapeHTML(item.source_url || '#') + '" target="_blank" rel="noopener noreferrer" class="breaking-news__item">' + escapeHTML(item.headline) + '</a>' +
+          '<span class="breaking-news__divider">|</span>';
+      }).join('\n      ');
+
+      // Duplicate for seamless CSS scroll animation
+      scrollEl.innerHTML = itemsHTML + '\n      ' + itemsHTML;
+    }).catch(function() {
+      scrollEl.innerHTML = '<span class="breaking-news__item">Could not load breaking news.</span>';
+    });
+  }
+
+  // ========================================
+  // ADMIN CONTENT CRUD
+  // ========================================
+
+  var contentEditTable = '';
+  var contentEditItem = null;
+
+  // Table-to-view mapping
+  var tableViewMap = {
+    ai_news: 'content-news',
+    semiconductor_news: 'content-semi',
+    training_courses: 'content-training',
+    industry_impact: 'content-industry',
+    ai_tools: 'content-tools',
+    breaking_news: 'content-ticker'
+  };
+
+  var tableListMap = {
+    ai_news: 'admin-content-news-list',
+    semiconductor_news: 'admin-content-semi-list',
+    training_courses: 'admin-content-training-list',
+    industry_impact: 'admin-content-industry-list',
+    ai_tools: 'admin-content-tools-list',
+    breaking_news: 'admin-content-ticker-list'
+  };
+
+  // Form field definitions for each table
+  var tableFields = {
+    ai_news: [
+      { key: 'badge', label: 'Badge/Category', type: 'text', placeholder: 'e.g. Model Releases, Hardware, Research' },
+      { key: 'date_display', label: 'Date Display', type: 'text', placeholder: 'e.g. March 3, 2026' },
+      { key: 'title', label: 'Title', type: 'text', placeholder: 'News headline', required: true },
+      { key: 'summary', label: 'Summary', type: 'textarea', placeholder: 'Brief summary of the news' },
+      { key: 'source_name', label: 'Source Name', type: 'text', placeholder: 'e.g. Reuters, TechCrunch' },
+      { key: 'source_url', label: 'Source URL', type: 'text', placeholder: 'https://...' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
+    ],
+    semiconductor_news: [
+      { key: 'badge', label: 'Badge/Category', type: 'text', placeholder: 'e.g. Supply Chain, Deal, Investment' },
+      { key: 'date_display', label: 'Date Display', type: 'text', placeholder: 'e.g. March 2026' },
+      { key: 'title', label: 'Title', type: 'text', placeholder: 'News headline', required: true },
+      { key: 'summary', label: 'Summary', type: 'textarea', placeholder: 'Brief summary' },
+      { key: 'source_name', label: 'Source Name', type: 'text', placeholder: 'e.g. EnkiAI' },
+      { key: 'source_url', label: 'Source URL', type: 'text', placeholder: 'https://...' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
+    ],
+    training_courses: [
+      { key: 'provider', label: 'Provider', type: 'text', placeholder: 'e.g. DeepLearning.AI' },
+      { key: 'title', label: 'Title', type: 'text', placeholder: 'Course title', required: true },
+      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Course description' },
+      { key: 'duration', label: 'Duration', type: 'text', placeholder: 'e.g. 30 hours' },
+      { key: 'level', label: 'Level', type: 'text', placeholder: 'e.g. Beginner, Intermediate' },
+      { key: 'price', label: 'Price Display', type: 'text', placeholder: 'e.g. Free Certificate, $49/mo' },
+      { key: 'enroll_url', label: 'Enrollment URL', type: 'text', placeholder: 'https://...' },
+      { key: 'is_free', label: 'Free Course', type: 'toggle' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
+    ],
+    industry_impact: [
+      { key: 'icon_name', label: 'Icon', type: 'select', options: ['healthcare', 'pharmaceutical_manufacturing', 'automotive_mobility', 'manufacturing_industry_4.0', 'semiconductors', 'enterprise_software'] },
+      { key: 'title', label: 'Title', type: 'text', placeholder: 'Industry name', required: true },
+      { key: 'summary', label: 'Summary', type: 'textarea', placeholder: 'Impact description' },
+      { key: 'source_name', label: 'Source Name', type: 'text', placeholder: 'e.g. Bessemer Venture Partners' },
+      { key: 'source_url', label: 'Source URL', type: 'text', placeholder: 'https://...' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
+    ],
+    ai_tools: [
+      { key: 'name', label: 'Tool Name', type: 'text', placeholder: 'e.g. MeetPilot', required: true },
+      { key: 'tagline', label: 'Tagline', type: 'text', placeholder: 'Short tagline' },
+      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Full description' },
+      { key: 'features', label: 'Features (comma-separated)', type: 'text', placeholder: 'Feature 1, Feature 2, Feature 3' },
+      { key: 'tags', label: 'Tags (comma-separated)', type: 'text', placeholder: 'Vision AI, Manufacturing' },
+      { key: 'status', label: 'Status', type: 'select', options: ['live', 'coming_soon'] },
+      { key: 'launch_url', label: 'Web Launch URL', type: 'text', placeholder: './meetpilot.html' },
+      { key: 'mobile_url', label: 'Mobile Launch URL', type: 'text', placeholder: './meetpilot-mobile.html' },
+      { key: 'preview_date', label: 'Preview Date', type: 'text', placeholder: 'e.g. March 2026' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
+    ],
+    breaking_news: [
+      { key: 'headline', label: 'Headline', type: 'text', placeholder: 'Breaking news headline', required: true },
+      { key: 'source_url', label: 'Source URL', type: 'text', placeholder: 'https://...' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
+    ]
+  };
+
+  function getItemDisplayTitle(table, item) {
+    if (table === 'breaking_news') return item.headline || 'Untitled';
+    if (table === 'ai_tools') return item.name || 'Untitled';
+    return item.title || item.name || item.headline || 'Untitled';
+  }
+
+  function getItemDisplayBadge(table, item) {
+    if (table === 'training_courses') return item.is_free ? 'Free' : 'Paid';
+    if (table === 'ai_tools') return item.status === 'live' ? 'Live' : 'Coming Soon';
+    if (table === 'breaking_news') return item.is_active ? 'Active' : 'Inactive';
+    return item.badge || '';
+  }
+
+  function showContentList(table) {
+    var listEl = document.getElementById(tableListMap[table]);
+    if (!listEl) return;
+
+    listEl.innerHTML = '<p class="admin-empty">Loading...</p>';
+
+    fetchContent(table, true).then(function(items) {
+      if (!items || !items.length) {
+        listEl.innerHTML = '<p class="admin-empty">No items yet. Click the button above to add one.</p>';
+        return;
+      }
+
+      listEl.innerHTML = items.map(function(item) {
+        var title = getItemDisplayTitle(table, item);
+        var badge = getItemDisplayBadge(table, item);
+        var activeClass = item.is_active === false ? ' style="opacity:0.5"' : '';
+        return '<div class="admin-post-item"' + activeClass + '>' +
+          '<div class="admin-post-item__info">' +
+            '<h4 class="admin-post-item__title">' + escapeHTML(title) + '</h4>' +
+            '<span class="admin-post-item__meta">' + escapeHTML(badge) + (item.is_active === false ? ' &middot; Inactive' : '') + '</span>' +
+          '</div>' +
+          '<div class="admin-post-item__actions">' +
+            '<button class="admin-btn admin-btn--sm admin-btn--edit" data-content-edit-table="' + table + '" data-content-edit-id="' + item.id + '">Edit</button>' +
+            '<button class="admin-btn admin-btn--sm admin-btn--delete" data-content-delete-table="' + table + '" data-content-delete-id="' + item.id + '">Delete</button>' +
+          '</div>' +
+        '</div>';
+      }).join('');
+
+      // Bind edit buttons
+      listEl.querySelectorAll('[data-content-edit-id]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var editTable = btn.getAttribute('data-content-edit-table');
+          var editId = parseInt(btn.getAttribute('data-content-edit-id'), 10);
+          var editItem = items.find(function(it) { return it.id === editId; });
+          if (editItem) showContentForm(editTable, editItem);
+        });
+      });
+
+      // Bind delete buttons
+      listEl.querySelectorAll('[data-content-delete-id]').forEach(function(btn) {
+        btn.addEventListener('click', function() {
+          var delTable = btn.getAttribute('data-content-delete-table');
+          var delId = parseInt(btn.getAttribute('data-content-delete-id'), 10);
+          deleteContentItem(delTable, delId);
+        });
+      });
+    }).catch(function() {
+      listEl.innerHTML = '<p class="admin-empty">Failed to load items. Is the API connected?</p>';
+    });
+  }
+
+  function showContentForm(table, item) {
+    contentEditTable = table;
+    contentEditItem = item || null;
+
+    var titleEl = document.getElementById('content-form-title');
+    var fieldsEl = document.getElementById('content-form-fields');
+    if (!titleEl || !fieldsEl) return;
+
+    titleEl.textContent = item ? 'Edit Item' : 'Add Item';
+
+    var fields = tableFields[table] || [];
+    fieldsEl.innerHTML = fields.map(function(field) {
+      var val = '';
+      if (item) {
+        val = item[field.key];
+        // Handle arrays for features and tags
+        if (Array.isArray(val)) val = val.join(', ');
+        if (val === null || val === undefined) val = '';
+        if (typeof val === 'boolean') val = val;
+        else val = String(val);
+      }
+
+      if (field.type === 'toggle') {
+        var checked = item ? (item[field.key] !== false) : (field.key === 'is_active');
+        return '<div class="admin-field">' +
+          '<label class="content-toggle-label">' +
+            '<span>' + escapeHTML(field.label) + '</span>' +
+            '<label class="content-toggle">' +
+              '<input type="checkbox" name="' + field.key + '"' + (checked ? ' checked' : '') + '>' +
+              '<span class="content-toggle__slider"></span>' +
+            '</label>' +
+          '</label>' +
+        '</div>';
+      }
+
+      if (field.type === 'select') {
+        var optionsHTML = (field.options || []).map(function(opt) {
+          return '<option value="' + escapeHTML(opt) + '"' + (val === opt ? ' selected' : '') + '>' + escapeHTML(opt) + '</option>';
+        }).join('');
+        return '<div class="admin-field">' +
+          '<label>' + escapeHTML(field.label) + '</label>' +
+          '<select name="' + field.key + '" class="admin-input">' + optionsHTML + '</select>' +
+        '</div>';
+      }
+
+      if (field.type === 'textarea') {
+        return '<div class="admin-field">' +
+          '<label>' + escapeHTML(field.label) + '</label>' +
+          '<textarea name="' + field.key + '" class="admin-textarea" rows="3" placeholder="' + escapeHTML(field.placeholder || '') + '">' + escapeHTML(val) + '</textarea>' +
+        '</div>';
+      }
+
+      return '<div class="admin-field">' +
+        '<label>' + escapeHTML(field.label) + '</label>' +
+        '<input type="' + (field.type === 'number' ? 'number' : 'text') + '" name="' + field.key + '" class="admin-input" value="' + escapeHTML(val) + '" placeholder="' + escapeHTML(field.placeholder || '') + '"' + (field.required ? ' required' : '') + '>' +
+      '</div>';
+    }).join('');
+
+    showAdminView('content-form');
+  }
+
+  function saveContentItem(e) {
+    e.preventDefault();
+    var form = document.getElementById('content-editor-form');
+    if (!form || !contentEditTable) return;
+
+    var fields = tableFields[contentEditTable] || [];
+    var data = {};
+    if (contentEditItem && contentEditItem.id) {
+      data.id = contentEditItem.id;
+    }
+
+    fields.forEach(function(field) {
+      if (field.type === 'toggle') {
+        var checkbox = form.querySelector('input[name="' + field.key + '"]');
+        data[field.key] = checkbox ? checkbox.checked : true;
+      } else if (field.key === 'features' || field.key === 'tags') {
+        var val = (form.querySelector('[name="' + field.key + '"]') || {}).value || '';
+        data[field.key] = val.split(',').map(function(s) { return s.trim(); }).filter(Boolean);
+      } else if (field.type === 'number') {
+        var numVal = (form.querySelector('[name="' + field.key + '"]') || {}).value;
+        data[field.key] = numVal ? parseInt(numVal, 10) : 0;
+      } else {
+        data[field.key] = (form.querySelector('[name="' + field.key + '"]') || {}).value || '';
+      }
+    });
+
+    var saveBtn = form.querySelector('button[type="submit"]');
+    if (saveBtn) { saveBtn.disabled = true; saveBtn.textContent = 'Saving...'; }
+
+    saveContent(contentEditTable, data).then(function(result) {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+      if (result.error) {
+        alert('Error saving: ' + result.error);
+        return;
+      }
+      // Go back to the content list and refresh public section
+      var viewName = tableViewMap[contentEditTable];
+      showAdminView(viewName);
+      showContentList(contentEditTable);
+      refreshPublicSection(contentEditTable);
+    }).catch(function(err) {
+      if (saveBtn) { saveBtn.disabled = false; saveBtn.textContent = 'Save'; }
+      alert('Failed to save: ' + (err.message || 'Unknown error'));
+    });
+  }
+
+  function deleteContentItem(table, id) {
+    if (!confirm('Are you sure you want to delete this item?')) return;
+    deleteContent(table, id).then(function(result) {
+      if (result.error) {
+        alert('Error deleting: ' + result.error);
+        return;
+      }
+      showContentList(table);
+      refreshPublicSection(table);
+    }).catch(function(err) {
+      alert('Failed to delete: ' + (err.message || 'Unknown error'));
+    });
+  }
+
+  function refreshPublicSection(table) {
+    if (table === 'ai_news') renderAINews();
+    else if (table === 'semiconductor_news') renderSemiNews();
+    else if (table === 'training_courses') renderTrainingCourses();
+    else if (table === 'industry_impact') renderIndustryImpact();
+    else if (table === 'ai_tools') renderAITools();
+    else if (table === 'breaking_news') renderBreakingNews();
+  }
+
+  // ========================================
+  // ADMIN TAB SYSTEM EXTENSION
+  // ========================================
+
+  // Extend existing admin tab click handler to handle new content tabs
+  if (adminTabsContainer) {
+    var allAdminTabBtns = adminTabsContainer.querySelectorAll('[data-admin-tab]');
+    allAdminTabBtns.forEach(function(tabBtn) {
+      tabBtn.addEventListener('click', function() {
+        var target = tabBtn.getAttribute('data-admin-tab');
+        allAdminTabBtns.forEach(function(b) { b.classList.remove('active'); });
+        tabBtn.classList.add('active');
+
+        if (target === 'posts') {
+          showAdminView('list');
+          renderAdminPostList();
+        } else if (target === 'subscribers') {
+          showAdminView('subscribers');
+          renderSubscriberList();
+        } else if (target === 'newsletter') {
+          showAdminView('newsletter');
+        } else if (target.indexOf('content-') === 0) {
+          // Content management tabs
+          showAdminView(target);
+          var tableKey = {
+            'content-news': 'ai_news',
+            'content-semi': 'semiconductor_news',
+            'content-training': 'training_courses',
+            'content-industry': 'industry_impact',
+            'content-tools': 'ai_tools',
+            'content-ticker': 'breaking_news'
+          }[target];
+          if (tableKey) showContentList(tableKey);
+        }
+      });
+    });
+  }
+
+  // Bind content-form submission
+  var contentEditorForm = document.getElementById('content-editor-form');
+  if (contentEditorForm) {
+    contentEditorForm.addEventListener('submit', saveContentItem);
+  }
+
+  // Bind content cancel button
+  var contentCancelBtn = document.getElementById('content-cancel-edit');
+  if (contentCancelBtn) {
+    contentCancelBtn.addEventListener('click', function() {
+      var viewName = tableViewMap[contentEditTable] || 'list';
+      showAdminView(viewName);
+    });
+  }
+
+  // Bind "Add New" buttons for each content type
+  document.querySelectorAll('[data-content-add]').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var table = btn.getAttribute('data-content-add');
+      showContentForm(table, null);
+    });
+  });
+
+  // ========================================
+  // INITIALIZE CONTENT SECTIONS ON PAGE LOAD
+  // ========================================
+
+  if (!isBlogPage) {
+    renderBreakingNews();
+    renderAINews();
+    renderSemiNews();
+    renderTrainingCourses();
+    renderIndustryImpact();
+    renderAITools();
+  }
+
 
 })();

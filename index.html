@@ -157,28 +157,8 @@
 <div class="breaking-news" id="breaking-news">
   <span class="breaking-news__label">Breaking</span>
   <div class="breaking-news__track">
-    <div class="breaking-news__scroll">
-      <a href="https://www.theverge.com/ai-artificial-intelligence/889926/openai-gpt-5-4-model-release-ai-agents" target="_blank" rel="noopener noreferrer" class="breaking-news__item">OpenAI launches GPT-5.4 with native computer use for autonomous agents</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.bloomberg.com/news/articles/2026-03-05/us-drafts-rules-for-sweeping-power-over-nvidia-s-global-sales" target="_blank" rel="noopener noreferrer" class="breaking-news__item">US drafts rule requiring approval for nearly all AI chip exports worldwide</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.semiconductor-today.com/news_items/2026/mar/semtech-hiefo-050326.shtml" target="_blank" rel="noopener noreferrer" class="breaking-news__item">Semtech acquires InP optics maker HieFo for $34M to boost data-center interconnects</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.theverge.com/ai-artificial-intelligence/889926/openai-gpt-5-4-model-release-ai-agents" target="_blank" rel="noopener noreferrer" class="breaking-news__item">GPT-5.4 rolls out in ChatGPT and API; adds GPT-5.4 Thinking for deeper reasoning</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.bloomberg.com/news/articles/2026-03-05/us-drafts-rules-for-sweeping-power-over-nvidia-s-global-sales" target="_blank" rel="noopener noreferrer" class="breaking-news__item">Proposed export permits could reshape global AI buildouts, impacting Nvidia and AMD</a>
-      <span class="breaking-news__divider">|</span>
-      <!-- Duplicate for seamless loop -->
-      <a href="https://www.theverge.com/ai-artificial-intelligence/889926/openai-gpt-5-4-model-release-ai-agents" target="_blank" rel="noopener noreferrer" class="breaking-news__item">OpenAI launches GPT-5.4 with native computer use for autonomous agents</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.bloomberg.com/news/articles/2026-03-05/us-drafts-rules-for-sweeping-power-over-nvidia-s-global-sales" target="_blank" rel="noopener noreferrer" class="breaking-news__item">US drafts rule requiring approval for nearly all AI chip exports worldwide</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.semiconductor-today.com/news_items/2026/mar/semtech-hiefo-050326.shtml" target="_blank" rel="noopener noreferrer" class="breaking-news__item">Semtech acquires InP optics maker HieFo for $34M to boost data-center interconnects</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.theverge.com/ai-artificial-intelligence/889926/openai-gpt-5-4-model-release-ai-agents" target="_blank" rel="noopener noreferrer" class="breaking-news__item">GPT-5.4 rolls out in ChatGPT and API; adds GPT-5.4 Thinking for deeper reasoning</a>
-      <span class="breaking-news__divider">|</span>
-      <a href="https://www.bloomberg.com/news/articles/2026-03-05/us-drafts-rules-for-sweeping-power-over-nvidia-s-global-sales" target="_blank" rel="noopener noreferrer" class="breaking-news__item">Proposed export permits could reshape global AI buildouts, impacting Nvidia and AMD</a>
-      <span class="breaking-news__divider">|</span>
+    <div class="breaking-news__scroll" id="breaking-news-scroll">
+      <!-- Populated dynamically by JS from breaking_news table -->
     </div>
   </div>
 </div>
@@ -201,111 +181,8 @@
       <h2 class="section__title">AI News</h2>
       <p class="section__subtitle">The latest developments shaping the AI landscape</p>
     </div>
-    <div class="card-grid stagger">
-      <!-- Card 1 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--model">Model Releases</span>
-          <span class="card__date">March 3, 2026</span>
-        </div>
-        <h3 class="card__title">DeepSeek V4 Launches with 1 Trillion Parameters</h3>
-        <p class="card__summary">DeepSeek V4 arrives with 1 trillion parameters and 32 billion active, featuring native multimodal support and 1M+ token context. The MODEL1 architecture with tiered KV cache storage cuts memory by 40%, while sparse FP8 decoding achieves 1.8x inference speedup.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://blog.mean.ceo/new-ai-model-releases-news-march-2026/" target="_blank" rel="noopener noreferrer">Mean CEO Blog</a>
-        </div>
-      </article>
-      <!-- Card 2 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--model">Model Releases</span>
-          <span class="card__date">February 19, 2026</span>
-        </div>
-        <h3 class="card__title">Gemini 3.1 Pro Dominates 13 of 16 Major Benchmarks</h3>
-        <p class="card__summary">Google's Gemini 3.1 Pro scored 77.1% on ARC-AGI-2 — more than double its predecessor — and 94.3% on GPQA Diamond for expert-level scientific reasoning. It represents a significant leap in pure logic performance.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://ai-weekly.ai/newsletter-03-03-2026/" target="_blank" rel="noopener noreferrer">AI Weekly</a>
-        </div>
-      </article>
-      <!-- Card 3 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--model">Model Releases</span>
-          <span class="card__date">February 5, 2026</span>
-        </div>
-        <h3 class="card__title">Claude Opus 4.6 Introduces Adaptive Thinking</h3>
-        <p class="card__summary">Anthropic's latest model decides when deeper reasoning is needed without user configuration, offering four effort levels. It also supports context compaction, automatically summarizing older context when conversations approach limits.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://www.anthropic.com/news/claude-opus-4-6" target="_blank" rel="noopener noreferrer">Anthropic</a>
-        </div>
-      </article>
-      <!-- Card 4 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--model">Model Releases</span>
-          <span class="card__date">February 5, 2026</span>
-        </div>
-        <h3 class="card__title">GPT-5.3 'Garlic' Achieves 6x Knowledge Density</h3>
-        <p class="card__summary">OpenAI's latest focuses on cognitive density over parameter scaling, shipping with a 400K-token context window with 'Perfect Recall' and 128K-token output capability. Hallucinations reduced by 45% vs GPT-4o.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://blog.mean.ceo/new-ai-model-releases-news-march-2026/" target="_blank" rel="noopener noreferrer">Mean CEO Blog</a>
-        </div>
-      </article>
-      <!-- Card 5 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--hardware">Hardware</span>
-          <span class="card__date">January 2026</span>
-        </div>
-        <h3 class="card__title">NVIDIA Unveils Vera Rubin Platform for Trillion-Parameter Models</h3>
-        <p class="card__summary">NVIDIA's new platform features H300 GPUs and a dedicated AI foundry targeting trillion-parameter models. Production begins later in 2026, continuing NVIDIA's data center revenue surge (Q3 2025: $30.8B, up 112% YoY).</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://ai-weekly.ai/newsletter-03-03-2026/" target="_blank" rel="noopener noreferrer">AI Weekly</a>
-        </div>
-      </article>
-      <!-- Card 6 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--research">Research</span>
-          <span class="card__date">March 2026</span>
-        </div>
-        <h3 class="card__title">MIT Develops Generative AI for Protein-Based Drug Design</h3>
-        <p class="card__summary">MIT researchers created a model that predicts how synthetic proteins fold and interact with biological targets, potentially saving pharma companies billions by reducing expensive lab trial and error for cancer and autoimmune treatments.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://blog.mean.ceo/new-ai-model-releases-news-march-2026/" target="_blank" rel="noopener noreferrer">Mean CEO Blog</a>
-        </div>
-      </article>
-      <!-- Card 7 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--product">Product</span>
-          <span class="card__date">March 2026</span>
-        </div>
-        <h3 class="card__title">Apple Confirms Siri Overhaul with Google's 1.2T Gemini Model</h3>
-        <p class="card__summary">Apple reimagines Siri using Google's 1.2 trillion parameter Gemini model, running on Private Cloud Compute for privacy. The update enables on-screen awareness and cross-app integration, targeting iOS 26.4.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://ai-weekly.ai/newsletter-03-03-2026/" target="_blank" rel="noopener noreferrer">AI Weekly</a>
-        </div>
-      </article>
-      <!-- Card 8 -->
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--product">Product</span>
-          <span class="card__date">February 2026</span>
-        </div>
-        <h3 class="card__title">Samsung Targets 800M AI-Equipped Devices by End of 2026</h3>
-        <p class="card__summary">Samsung plans to double its Gemini AI-equipped devices to 800 million, bringing advanced AI capabilities to mid-tier and budget smartphones. Galaxy AI innovations featured at MWC 2026.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://blog.mean.ceo/new-ai-model-releases-news-march-2026/" target="_blank" rel="noopener noreferrer">Mean CEO Blog</a>
-        </div>
-      </article>
+    <div id="news-cards" class="card-grid stagger">
+      <!-- Populated dynamically by JS from ai_news table -->
     </div>
   </section>
 
@@ -315,73 +192,8 @@
       <h2 class="section__title">Semiconductor Insights</h2>
       <p class="section__subtitle">The silicon foundation powering the AI revolution</p>
     </div>
-    <div class="card-grid card-grid--3 stagger">
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--hardware">Supply Chain</span>
-        </div>
-        <h3 class="card__title">AI Data Centers to Consume 70% of All Memory Chips by 2026</h3>
-        <p class="card__summary">A structural reallocation of semiconductor manufacturing capacity is underway. AI data centers are projected to consume 70% of all memory chips, creating supply conflicts with the automotive industry. This shift may result in 600,000 fewer vehicles built in 2026.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://enkiai.com/ai-market-intelligence/semiconductor-scarcity-2026-the-ai-vs-auto-chip-war" target="_blank" rel="noopener noreferrer">EnkiAI</a>
-        </div>
-      </article>
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--product">Deal</span>
-        </div>
-        <h3 class="card__title">Tesla's $16.5B Samsung Deal Reshapes Chip Supply Chains</h3>
-        <p class="card__summary">Tesla secured a landmark multi-year deal with Samsung to produce next-gen AI chips at a Texas facility through 2033. Tesla is also dual-sourcing its AI 5 chip between TSMC and Samsung to diversify supply risk.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://enkiai.com/ai-market-intelligence/semiconductor-scarcity-2026-the-ai-vs-auto-chip-war" target="_blank" rel="noopener noreferrer">EnkiAI</a>
-        </div>
-      </article>
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--hardware">Investment</span>
-        </div>
-        <h3 class="card__title">$400 Billion Fab Equipment Investment Targets AI Nodes</h3>
-        <p class="card__summary">The semiconductor industry plans $400B in 300mm fab equipment between 2025-2027, primarily targeting advanced nodes and HBM demanded by AI — not the legacy nodes that form the backbone of automotive electronics.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://enkiai.com/ai-market-intelligence/semiconductor-scarcity-2026-the-ai-vs-auto-chip-war" target="_blank" rel="noopener noreferrer">EnkiAI</a>
-        </div>
-      </article>
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--model">Edge AI</span>
-        </div>
-        <h3 class="card__title">Edge AI Chips Lead 2026 Semiconductor Trends</h3>
-        <p class="card__summary">Demand for specialized chips for low-power ML accelerators, sensor-integrated chips, and memory-optimized chips will capture the market in 2026. Innovation in packaging drives cost-efficiency and miniaturization.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://www.eletimes.ai/predictions-and-trends-in-semicon-manufacturing-for-2026" target="_blank" rel="noopener noreferrer">ELE Times</a>
-        </div>
-      </article>
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--research">Processors</span>
-        </div>
-        <h3 class="card__title">AMD Expands with Ryzen AI 400 Series for On-Device AI</h3>
-        <p class="card__summary">AMD's new Ryzen AI 400 series processors feature upgraded NPUs for local AI tasks like real-time translation and content creation, alongside Turin data center chips for enterprise workloads.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://ai-weekly.ai/newsletter-03-03-2026/" target="_blank" rel="noopener noreferrer">AI Weekly</a>
-        </div>
-      </article>
-      <article class="card">
-        <div class="card__meta">
-          <span class="badge badge--model">Innovation</span>
-        </div>
-        <h3 class="card__title">Heterogeneous Integration Drives 2026 Chip Innovation</h3>
-        <p class="card__summary">Combining different processes to create powerful, cost-effective systems is moving beyond traditional single-chip technology. This approach serves AI, 5G, and industrial needs through innovative packaging.</p>
-        <div class="card__source">
-          <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M18 13v6a2 2 0 0 1-2 2H5a2 2 0 0 1-2-2V8a2 2 0 0 1 2-2h6"/><polyline points="15 3 21 3 21 9"/><line x1="10" y1="14" x2="21" y2="3"/></svg>
-          <a href="https://www.eletimes.ai/predictions-and-trends-in-semicon-manufacturing-for-2026" target="_blank" rel="noopener noreferrer">ELE Times</a>
-        </div>
-      </article>
+    <div id="semi-cards" class="card-grid card-grid--3 stagger">
+      <!-- Populated dynamically by JS from semiconductor_news table -->
     </div>
   </section>
 
@@ -398,293 +210,15 @@
 
     <!-- Free Courses -->
     <div class="tab-content active" id="tab-free">
-      <div class="card-grid card-grid--3 stagger">
-        <!-- Free 1 -->
-        <article class="course-card">
-          <span class="course-card__provider">University of Helsinki</span>
-          <h3 class="course-card__title">Elements of AI</h3>
-          <p class="course-card__desc">Essential AI concepts covering potential, limitations, and societal impact. Available in 25+ languages.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              30 hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">Free Certificate</span>
-            <a href="https://www.elementsofai.com/" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Free 2 -->
-        <article class="course-card">
-          <span class="course-card__provider">DeepLearning.AI / Andrew Ng</span>
-          <h3 class="course-card__title">AI For Everyone</h3>
-          <p class="course-card__desc">Non-technical course for business leaders covering AI strategy, project workflows, and ethical considerations.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              8-10 hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">Free (audit)</span>
-            <a href="https://www.coursera.org/learn/ai-for-everyone" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Free 3 -->
-        <article class="course-card">
-          <span class="course-card__provider">Google Cloud</span>
-          <h3 class="course-card__title">Introduction to Generative AI</h3>
-          <p class="course-card__desc">Quick overview of generative AI concepts from Google Cloud experts.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              1 hour
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">Free Badge</span>
-            <a href="https://www.coursera.org/learn/introduction-to-generative-ai" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Free 4 -->
-        <article class="course-card">
-          <span class="course-card__provider">DeepLearning.AI</span>
-          <h3 class="course-card__title">Generative AI for Everyone</h3>
-          <p class="course-card__desc">Covers prompt engineering, responsible AI, and AI product strategy with hands-on exercises.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              4-6 hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">Free (audit)</span>
-            <a href="https://www.coursera.org/learn/generative-ai-for-everyone" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Free 5 -->
-        <article class="course-card">
-          <span class="course-card__provider">Harvard University</span>
-          <h3 class="course-card__title">CS50's AI with Python</h3>
-          <p class="course-card__desc">Comprehensive course on search algorithms, neural networks, machine translation, and game development with Python.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              70+ hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Intermediate
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">$299 (optional cert)</span>
-            <a href="https://cs50.harvard.edu/ai/" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Free 6 -->
-        <article class="course-card">
-          <span class="course-card__provider">fast.ai</span>
-          <h3 class="course-card__title">Practical Deep Learning</h3>
-          <p class="course-card__desc">Learn-by-doing approach building real AI models from day one. Completely free and open.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              20+ hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Intermediate
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">Portfolio-based</span>
-            <a href="https://course.fast.ai/" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Free 7 -->
-        <article class="course-card">
-          <span class="course-card__provider">Microsoft Learn</span>
-          <h3 class="course-card__title">Microsoft AI Fundamentals</h3>
-          <p class="course-card__desc">Azure AI services foundation with free hands-on labs. Leads to AI-900 certification.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              6-8 hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">Free (exam: $165)</span>
-            <a href="https://learn.microsoft.com/en-us/training/paths/get-started-with-artificial-intelligence-on-azure/" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Free 8 -->
-        <article class="course-card">
-          <span class="course-card__provider">Vanderbilt University</span>
-          <h3 class="course-card__title">Prompt Engineering for ChatGPT</h3>
-          <p class="course-card__desc">Master prompt design, optimization, and prompt patterns for effective AI interactions.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              18 hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">Free Certificate</span>
-            <a href="https://www.coursera.org/learn/prompt-engineering" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
+      <div id="free-course-cards" class="card-grid card-grid--3 stagger">
+        <!-- Populated dynamically by JS from training_courses table (is_free=true) -->
       </div>
     </div>
 
     <!-- Paid Courses -->
     <div class="tab-content" id="tab-paid">
-      <div class="card-grid card-grid--3 stagger">
-        <!-- Paid 1 -->
-        <article class="course-card">
-          <span class="course-card__provider">DeepLearning.AI / Stanford</span>
-          <h3 class="course-card__title">Machine Learning Specialization</h3>
-          <p class="course-card__desc">Andrew Ng's flagship course covering supervised/unsupervised learning, neural networks, and deep learning.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              1-3 months
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">$49/mo</span>
-            <a href="https://www.coursera.org/specializations/machine-learning-introduction" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Paid 2 -->
-        <article class="course-card">
-          <span class="course-card__provider">Udemy / Ed Donner</span>
-          <h3 class="course-card__title">LLM Engineering: Master AI, LLMs & Agents</h3>
-          <p class="course-card__desc">Full LLM engineering pipeline from transformer architecture to production apps. 204K+ students, 4.7 stars.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              35+ hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Intermediate
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">~$15-85</span>
-            <a href="https://www.udemy.com/course/llm-engineering-master-ai-and-large-language-models/" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Paid 3 -->
-        <article class="course-card">
-          <span class="course-card__provider">Udemy / Ligency</span>
-          <h3 class="course-card__title">AI Agents & Agentic AI</h3>
-          <p class="course-card__desc">Build autonomous AI systems that reason, plan, and execute multi-step tasks. Bestseller with 4.7 stars.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              20+ hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Intermediate
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">~$15-85</span>
-            <a href="https://www.udemy.com/" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Paid 4 -->
-        <article class="course-card">
-          <span class="course-card__provider">Google / Coursera</span>
-          <h3 class="course-card__title">Google AI Essentials</h3>
-          <p class="course-card__desc">Google's career credential covering AI concepts and practical applications in the Google ecosystem.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              5-7 hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">$49/mo</span>
-            <a href="https://www.coursera.org/learn/google-ai-essentials" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Paid 5 -->
-        <article class="course-card">
-          <span class="course-card__provider">AWS & DeepLearning.AI</span>
-          <h3 class="course-card__title">Generative AI with LLMs</h3>
-          <p class="course-card__desc">Three-module deep dive into prompt engineering, model fine-tuning, and real-world deployment.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              16 hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Intermediate
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">$49/mo</span>
-            <a href="https://www.coursera.org/learn/generative-ai-with-llms" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
-        <!-- Paid 6 -->
-        <article class="course-card">
-          <span class="course-card__provider">Udemy / Kirill Eremenko</span>
-          <h3 class="course-card__title">Machine Learning A-Z: AI, Python & R</h3>
-          <p class="course-card__desc">The OG ML course covering classification, regression, clustering, and dimensionality reduction fundamentals.</p>
-          <div class="course-card__details">
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-              40+ hours
-            </span>
-            <span class="course-card__detail">
-              <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2"><path d="M22 10v6M2 10l10-5 10 5-10 5z"/><path d="M6 12v5c3 3 9 3 12 0v-5"/></svg>
-              Beginner
-            </span>
-          </div>
-          <div class="course-card__footer">
-            <span class="course-card__price">~$15-85</span>
-            <a href="https://www.udemy.com/course/machinelearning/" target="_blank" rel="noopener noreferrer" class="course-card__link">Enroll →</a>
-          </div>
-        </article>
+      <div id="paid-course-cards" class="card-grid card-grid--3 stagger">
+        <!-- Populated dynamically by JS from training_courses table (is_free=false) -->
       </div>
     </div>
   </section>
@@ -695,55 +229,8 @@
       <h2 class="section__title">Industry Impact</h2>
       <p class="section__subtitle">How AI is transforming key sectors of the global economy</p>
     </div>
-    <div class="card-grid card-grid--3 stagger">
-      <article class="industry-card">
-        <div class="industry-card__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18"/><path d="M5 21V7l8-4v18"/><path d="M19 21V11l-6-4"/><path d="M9 9v.01"/><path d="M9 12v.01"/><path d="M9 15v.01"/><path d="M9 18v.01"/></svg>
-        </div>
-        <h3 class="industry-card__title">Healthcare</h3>
-        <p class="industry-card__summary">AI companies captured 55% of all health tech funding in 2025. Focus areas: predictive patient deterioration, AI-assisted triage, virtual nursing, and drug discovery with generative models.</p>
-        <div class="industry-card__source">Source: <a href="https://www.bvp.com/atlas/state-of-health-ai-2026" target="_blank" rel="noopener noreferrer">Bessemer Venture Partners</a></div>
-      </article>
-      <article class="industry-card">
-        <div class="industry-card__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M10.5 20H4a2 2 0 0 1-2-2V5c0-1.1.9-2 2-2h3.93a2 2 0 0 1 1.66.9l.82 1.2a2 2 0 0 0 1.66.9H20a2 2 0 0 1 2 2v2"/><circle cx="16" cy="16" r="4.5"/><path d="M18.5 13.5v5h-5"/></svg>
-        </div>
-        <h3 class="industry-card__title">Pharmaceutical Manufacturing</h3>
-        <p class="industry-card__summary">Global AI in pharma manufacturing projected to grow from $1.2B to $34B by 2040 (28% CAGR). Leading use cases: predictive maintenance, real-time quality control, and AI-powered biologics design.</p>
-        <div class="industry-card__source">Source: <a href="https://finance.yahoo.com/news/ai-pharma-manufacturing-market-research-092400399.html" target="_blank" rel="noopener noreferrer">Yahoo Finance / ResearchAndMarkets</a></div>
-      </article>
-      <article class="industry-card">
-        <div class="industry-card__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M5 17h2l2-4h6l2 4h2"/><circle cx="7.5" cy="17" r="2.5"/><circle cx="16.5" cy="17" r="2.5"/><path d="M3 9h18"/><path d="M5 9l2-5h10l2 5"/></svg>
-        </div>
-        <h3 class="industry-card__title">Automotive & Mobility</h3>
-        <p class="industry-card__summary">Automakers are forging direct, multi-billion dollar chip partnerships. Tesla's $16.5B Samsung deal, GM-NVIDIA autonomous driving collaboration, and Hyundai's 20-company semiconductor coalition signal a fundamental supply chain transformation.</p>
-        <div class="industry-card__source">Source: <a href="https://enkiai.com/ai-market-intelligence/semiconductor-scarcity-2026-the-ai-vs-auto-chip-war" target="_blank" rel="noopener noreferrer">EnkiAI</a></div>
-      </article>
-      <article class="industry-card">
-        <div class="industry-card__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 20h20"/><path d="M5 20V8l4-4h6l4 4v12"/><path d="M9 20v-4h6v4"/><path d="M9 12h.01"/><path d="M15 12h.01"/></svg>
-        </div>
-        <h3 class="industry-card__title">Manufacturing & Industry 4.0</h3>
-        <p class="industry-card__summary">AI-powered process optimization, digital twins, and predictive maintenance reshape factory operations. Over 60% of leading manufacturers employ AI for quality inspections, yield improvement, and supply chain optimization.</p>
-        <div class="industry-card__source">Source: <a href="https://finance.yahoo.com/news/ai-pharma-manufacturing-market-research-092400399.html" target="_blank" rel="noopener noreferrer">Yahoo Finance</a></div>
-      </article>
-      <article class="industry-card">
-        <div class="industry-card__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><circle cx="12" cy="12" r="3"/><path d="M12 1v2M12 21v2M4.22 4.22l1.42 1.42M18.36 18.36l1.42 1.42M1 12h2M21 12h2M4.22 19.78l1.42-1.42M18.36 5.64l1.42-1.42"/></svg>
-        </div>
-        <h3 class="industry-card__title">Semiconductors</h3>
-        <p class="industry-card__summary">$400B in fab equipment investment flows toward AI-optimized advanced nodes. Edge AI chips, heterogeneous integration, and HBM demand drive unprecedented capacity expansion through 2027.</p>
-        <div class="industry-card__source">Source: <a href="https://www.eletimes.ai/predictions-and-trends-in-semicon-manufacturing-for-2026" target="_blank" rel="noopener noreferrer">ELE Times</a></div>
-      </article>
-      <article class="industry-card">
-        <div class="industry-card__icon">
-          <svg width="24" height="24" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="3" width="20" height="14" rx="2" ry="2"/><line x1="8" y1="21" x2="16" y2="21"/><line x1="12" y1="17" x2="12" y2="21"/></svg>
-        </div>
-        <h3 class="industry-card__title">Enterprise Software</h3>
-        <p class="industry-card__summary">Agentic AI capabilities mature rapidly — systems now plan multi-step workflows, recover from errors, and adapt strategies. 255+ model releases in Q1 2026 alone, with efficiency over scale as the dominant trend.</p>
-        <div class="industry-card__source">Source: <a href="https://ai-weekly.ai/newsletter-03-03-2026/" target="_blank" rel="noopener noreferrer">AI Weekly</a></div>
-      </article>
+    <div id="industry-cards" class="card-grid card-grid--3 stagger">
+      <!-- Populated dynamically by JS from industry_impact table -->
     </div>
   </section>
 
@@ -754,116 +241,15 @@
       <p class="section__subtitle">Built by Vidhai — practical AI tools for real-world problems</p>
     </div>
 
-    <!-- Featured: MeetPilot -->
-    <div class="tool-featured reveal">
-      <div class="tool-featured__header">
-        <svg class="tool-featured__logo" width="40" height="40" viewBox="0 0 32 32" fill="none" xmlns="http://www.w3.org/2000/svg">
-          <rect width="32" height="32" rx="8" fill="rgba(0,196,204,0.1)" stroke="rgba(0,196,204,0.2)" stroke-width="1"/>
-          <path d="M7 16 Q10.5 10 14 16 Q17.5 22 21 16 Q23.5 11.5 25 16" stroke="#00C4CC" stroke-width="1.75" stroke-linecap="round" stroke-linejoin="round" fill="none"/>
-          <circle cx="16" cy="16" r="2.5" fill="rgba(0,196,204,0.3)" stroke="#00C4CC" stroke-width="1.25"/>
-        </svg>
-        <div>
-          <h3 class="tool-featured__name">MeetPilot</h3>
-          <p class="tool-featured__tagline">Real-time AI copilot for your meetings</p>
-        </div>
-        <span class="badge badge--live">Live</span>
-      </div>
-      <p class="tool-featured__desc">MeetPilot listens to your meetings in real time, transcribes the conversation with speaker identification, and generates contextual AI suggestions — talking points, objection handling, key facts, and smart questions — so you never miss a beat during B2B sales calls and customer meetings.</p>
-      <div class="tool-featured__features">
-        <div class="tool-featured__feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><circle cx="12" cy="12" r="10"/><polyline points="12 6 12 12 16 14"/></svg>
-          <span>Live transcription via Whisper</span>
-        </div>
-        <div class="tool-featured__feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M17 21v-2a4 4 0 00-4-4H5a4 4 0 00-4 4v2"/><circle cx="9" cy="7" r="4"/><path d="M23 21v-2a4 4 0 00-3-3.87"/><path d="M16 3.13a4 4 0 010 7.75"/></svg>
-          <span>Auto speaker identification</span>
-        </div>
-        <div class="tool-featured__feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 2C6.48 2 2 6.48 2 12s4.48 10 10 10 10-4.48 10-10S17.52 2 12 2z"/><path d="M8 12 Q10 8 12 12 Q14 16 16 12"/></svg>
-          <span>Contextual AI suggestions</span>
-        </div>
-        <div class="tool-featured__feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-          <span>Screen capture for visual context</span>
-        </div>
-        <div class="tool-featured__feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M14.7 6.3a1 1 0 000 1.4l1.6 1.6a1 1 0 001.4 0l3.77-3.77a6 6 0 01-7.94 7.94l-6.91 6.91a2.12 2.12 0 01-3-3l6.91-6.91a6 6 0 017.94-7.94l-3.76 3.76z"/></svg>
-          <span>Multi-LLM: GPT-4o, Claude, Perplexity</span>
-        </div>
-        <div class="tool-featured__feature">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>
-          <span>Privacy-first: API keys never stored</span>
-        </div>
-      </div>
-      <div class="tool-featured__actions">
-        <a href="./meetpilot.html" target="_blank" rel="noopener noreferrer" class="tool-featured__btn tool-featured__btn--primary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="2" y="3" width="20" height="14" rx="2"/><path d="M8 21h8M12 17v4"/></svg>
-          Launch Web App
-        </a>
-        <a href="./meetpilot-mobile.html" target="_blank" rel="noopener noreferrer" class="tool-featured__btn tool-featured__btn--secondary">
-          <svg width="16" height="16" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><rect x="5" y="2" width="14" height="20" rx="2" ry="2"/><line x1="12" y1="18" x2="12.01" y2="18"/></svg>
-          Launch Mobile App
-        </a>
-      </div>
+    <!-- Featured Tools (dynamically populated) -->
+    <div id="tools-featured">
+      <!-- Populated dynamically by JS from ai_tools table (status=live) -->
     </div>
 
     <!-- Coming Soon Tools -->
-    <h3 class="tool-upcoming-label reveal">Coming Soon</h3>
-    <div class="card-grid card-grid--3 stagger">
-      <!-- Tool 1 -->
-      <article class="tool-card tool-card--teaser">
-        <div class="tool-card__badge">
-          <span class="badge badge--coming-soon">Coming Soon</span>
-        </div>
-        <div class="tool-card__icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M14.7 6.3a1 1 0 0 0 0 1.4l1.6 1.6a1 1 0 0 0 1.4 0l3.77-3.77a6 6 0 0 1-7.94 7.94l-6.91 6.91a2.12 2.12 0 0 1-3-3l6.91-6.91a6 6 0 0 1 7.94-7.94l-3.76 3.76z"/></svg>
-        </div>
-        <h3 class="tool-card__title">AI Quality Inspector</h3>
-        <p class="tool-card__desc">Computer vision tool for manufacturing defect detection. Upload product images and get instant quality analysis powered by deep learning models.</p>
-        <div class="tool-card__tags">
-          <span class="badge badge--tag">Vision AI</span>
-          <span class="badge badge--tag">Manufacturing</span>
-        </div>
-        <div class="tool-card__teaser">
-          <span class="tool-card__teaser-text">Preview coming March 2026</span>
-        </div>
-      </article>
-      <!-- Tool 2 -->
-      <article class="tool-card tool-card--teaser">
-        <div class="tool-card__badge">
-          <span class="badge badge--coming-soon">Coming Soon</span>
-        </div>
-        <div class="tool-card__icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M21 15a2 2 0 0 1-2 2H7l-4 4V5a2 2 0 0 1 2-2h14a2 2 0 0 1 2 2z"/><path d="M8 10h.01"/><path d="M12 10h.01"/><path d="M16 10h.01"/></svg>
-        </div>
-        <h3 class="tool-card__title">Supply Chain AI Assistant</h3>
-        <p class="tool-card__desc">Conversational AI for supply chain queries. Ask natural-language questions about inventory, lead times, and supplier risk to get instant insights.</p>
-        <div class="tool-card__tags">
-          <span class="badge badge--tag">NLP</span>
-          <span class="badge badge--tag">Supply Chain</span>
-        </div>
-        <div class="tool-card__teaser">
-          <span class="tool-card__teaser-text">Preview coming Q2 2026</span>
-        </div>
-      </article>
-      <!-- Tool 3 -->
-      <article class="tool-card tool-card--teaser">
-        <div class="tool-card__badge">
-          <span class="badge badge--coming-soon">Coming Soon</span>
-        </div>
-        <div class="tool-card__icon">
-          <svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="1.5" stroke-linecap="round" stroke-linejoin="round"><path d="M2 3h6a4 4 0 0 1 4 4v14a3 3 0 0 0-3-3H2z"/><path d="M22 3h-6a4 4 0 0 0-4 4v14a3 3 0 0 1 3-3h7z"/></svg>
-        </div>
-        <h3 class="tool-card__title">AI Training Recommender</h3>
-        <p class="tool-card__desc">Personalized AI course recommendations based on your role, experience level, and learning goals. Curated paths from free to advanced certifications.</p>
-        <div class="tool-card__tags">
-          <span class="badge badge--tag">Recommender</span>
-          <span class="badge badge--tag">Education</span>
-        </div>
-        <div class="tool-card__teaser">
-          <span class="tool-card__teaser-text">Preview coming Q2 2026</span>
-        </div>
-      </article>
+    <h3 class="tool-upcoming-label reveal" id="tools-upcoming-label" style="display:none;">Coming Soon</h3>
+    <div id="tools-upcoming" class="card-grid card-grid--3 stagger">
+      <!-- Populated dynamically by JS from ai_tools table (status=coming_soon) -->
     </div>
   </section>
 
@@ -959,8 +345,14 @@
     <!-- Admin Tabs -->
     <div class="admin-tabs" id="admin-tabs" style="display:none">
       <button class="admin-tab active" data-admin-tab="posts">Posts</button>
+      <button class="admin-tab" data-admin-tab="content-news">News</button>
+      <button class="admin-tab" data-admin-tab="content-semi">Semiconductors</button>
+      <button class="admin-tab" data-admin-tab="content-training">Training</button>
+      <button class="admin-tab" data-admin-tab="content-industry">Industry</button>
+      <button class="admin-tab" data-admin-tab="content-tools">Tools</button>
+      <button class="admin-tab" data-admin-tab="content-ticker">Ticker</button>
       <button class="admin-tab" data-admin-tab="subscribers">Subscribers</button>
-      <button class="admin-tab" data-admin-tab="newsletter">Send Newsletter</button>
+      <button class="admin-tab" data-admin-tab="newsletter">Newsletter</button>
     </div>
 
     <!-- List View -->
@@ -1053,6 +445,79 @@
         </div>
         <div id="nl-preview-frame" class="nl-preview-frame"></div>
       </div>
+    </div>
+
+    <!-- Content Admin Views (News, Semi, Training, Industry, Tools, Ticker) -->
+    <div data-admin-view="content-news" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="ai_news">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add News Item
+        </button>
+      </div>
+      <div id="admin-content-news-list" class="admin-post-list"></div>
+    </div>
+
+    <div data-admin-view="content-semi" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="semiconductor_news">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Semiconductor Item
+        </button>
+      </div>
+      <div id="admin-content-semi-list" class="admin-post-list"></div>
+    </div>
+
+    <div data-admin-view="content-training" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="training_courses">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Training Course
+        </button>
+      </div>
+      <div id="admin-content-training-list" class="admin-post-list"></div>
+    </div>
+
+    <div data-admin-view="content-industry" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="industry_impact">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Industry Item
+        </button>
+      </div>
+      <div id="admin-content-industry-list" class="admin-post-list"></div>
+    </div>
+
+    <div data-admin-view="content-tools" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="ai_tools">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add AI Tool
+        </button>
+      </div>
+      <div id="admin-content-tools-list" class="admin-post-list"></div>
+    </div>
+
+    <div data-admin-view="content-ticker" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="breaking_news">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Ticker Item
+        </button>
+      </div>
+      <div id="admin-content-ticker-list" class="admin-post-list"></div>
+    </div>
+
+    <!-- Content Edit Form (shared for all content types) -->
+    <div data-admin-view="content-form" style="display:none">
+      <h3 class="admin-editor-title" id="content-form-title">Add Item</h3>
+      <form id="content-editor-form" class="admin-editor-form">
+        <div id="content-form-fields"></div>
+        <div class="admin-editor-actions">
+          <button type="submit" class="admin-btn admin-btn--primary">Save</button>
+          <button type="button" class="admin-btn" id="content-cancel-edit">Cancel</button>
+        </div>
+      </form>
     </div>
 
     <!-- LinkedIn View -->
