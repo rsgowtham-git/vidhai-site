@@ -3477,6 +3477,24 @@ a:hover {
   color: var(--color-text-muted);
 }
 
+/* --- Live Price Flash --- */
+.invest-timestamp {
+  font-size: 0.75rem;
+  color: var(--color-text-muted);
+  margin-top: var(--space-3);
+  text-align: right;
+  font-style: italic;
+}
+
+@keyframes priceFlash {
+  0% { background-color: rgba(34, 197, 94, 0.25); }
+  100% { background-color: transparent; }
+}
+
+.invest-price-flash {
+  animation: priceFlash 1.5s ease-out;
+}
+
 /* --- IPO Status Badges --- */
 .invest-status {
   display: inline-block;

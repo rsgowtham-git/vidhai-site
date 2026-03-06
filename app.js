@@ -2359,6 +2359,80 @@
     return 'invest-badge--other';
   }
 
+  function buildMoverRow(item) {
+    var changeNum = parseFloat(item.change) || 0;
+    var changePctNum = parseFloat(item.change_percent) || 0;
+    var changeClass = changeNum >= 0 ? 'invest-change--up' : 'invest-change--down';
+    var changeSign = changeNum >= 0 ? '+' : '';
+    var pctSign = changePctNum >= 0 ? '+' : '';
+
+    return '<tr data-ticker="' + escapeHTML(item.ticker) + '">' +
+      '<td class="invest-ticker">' + escapeHTML(item.ticker) + '</td>' +
+      '<td>' + escapeHTML(item.company_name) + '</td>' +
+      '<td class="invest-price">$' + escapeHTML(String(item.price)) + '</td>' +
+      '<td class="invest-change ' + changeClass + '">' + changeSign + escapeHTML(String(item.change)) + '</td>' +
+      '<td class="invest-changepct ' + changeClass + '">' + pctSign + escapeHTML(String(item.change_percent)) + '%</td>' +
+      '<td class="invest-mcap">' + escapeHTML(item.market_cap || '') + '</td>' +
+      '<td><span class="invest-badge ' + getCategoryBadgeClass(item.category) + '">' + escapeHTML(item.category || '') + '</span></td>' +
+    '</tr>';
+  }
+
+  function fetchLivePrices(items) {
+    var tickers = items.map(function(it) { return it.ticker; }).join(',');
+    var apiBase = window.location.origin;
+    return fetch(apiBase + '/api/stock-prices?tickers=' + encodeURIComponent(tickers))
+      .then(function(resp) { return resp.ok ? resp.json() : null; })
+      .then(function(data) {
+        if (!data || !data.quotes) return;
+        var tbody = document.getElementById('market-movers-body');
+        if (!tbody) return;
+
+        items.forEach(function(item) {
+          var live = data.quotes[item.ticker];
+          if (!live || live.price == null) return;
+
+          var row = tbody.querySelector('tr[data-ticker="' + item.ticker + '"]');
+          if (!row) return;
+
+          var changeNum = live.change != null ? live.change : 0;
+          var changePctNum = live.change_percent != null ? live.change_percent : 0;
+          var changeClass = changeNum >= 0 ? 'invest-change--up' : 'invest-change--down';
+          var changeSign = changeNum >= 0 ? '+' : '';
+          var pctSign = changePctNum >= 0 ? '+' : '';
+
+          var priceCell = row.querySelector('.invest-price');
+          var changeCell = row.querySelector('.invest-change');
+          var changePctCell = row.querySelector('.invest-changepct');
+          var mcapCell = row.querySelector('.invest-mcap');
+
+          if (priceCell) {
+            priceCell.textContent = '$' + live.price.toFixed(2);
+            priceCell.classList.add('invest-price-flash');
+          }
+          if (changeCell) {
+            changeCell.textContent = changeSign + changeNum.toFixed(2);
+            changeCell.className = 'invest-change ' + changeClass;
+          }
+          if (changePctCell) {
+            changePctCell.textContent = pctSign + changePctNum.toFixed(2) + '%';
+            changePctCell.className = 'invest-changepct ' + changeClass;
+          }
+          if (mcapCell && live.market_cap) {
+            mcapCell.textContent = live.market_cap;
+          }
+        });
+
+        // Update the timestamp
+        var tsEl = document.getElementById('movers-timestamp');
+        if (tsEl && data.fetched_at) {
+          var d = new Date(data.fetched_at);
+          tsEl.textContent = 'Live prices as of ' + d.toLocaleTimeString([], { hour: '2-digit', minute: '2-digit' });
+          tsEl.style.display = 'block';
+        }
+      })
+      .catch(function() { /* silent — DB values remain as fallback */ });
+  }
+
   function renderMarketMovers() {
     var tbody = document.getElementById('market-movers-body');
     if (!tbody) return;
@@ -2368,23 +2442,10 @@
         tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">No market movers data yet.</td></tr>';
         return;
       }
-      tbody.innerHTML = items.map(function(item) {
-        var changeNum = parseFloat(item.change) || 0;
-        var changePctNum = parseFloat(item.change_percent) || 0;
-        var changeClass = changeNum >= 0 ? 'invest-change--up' : 'invest-change--down';
-        var changeSign = changeNum >= 0 ? '+' : '';
-        var pctSign = changePctNum >= 0 ? '+' : '';
+      tbody.innerHTML = items.map(buildMoverRow).join('');
 
-        return '<tr>' +
-          '<td class="invest-ticker">' + escapeHTML(item.ticker) + '</td>' +
-          '<td>' + escapeHTML(item.company_name) + '</td>' +
-          '<td>$' + escapeHTML(String(item.price)) + '</td>' +
-          '<td class="' + changeClass + '">' + changeSign + escapeHTML(String(item.change)) + '</td>' +
-          '<td class="' + changeClass + '">' + pctSign + escapeHTML(String(item.change_percent)) + '%</td>' +
-          '<td>' + escapeHTML(item.market_cap || '') + '</td>' +
-          '<td><span class="invest-badge ' + getCategoryBadgeClass(item.category) + '">' + escapeHTML(item.category || '') + '</span></td>' +
-        '</tr>';
-      }).join('');
+      // Fetch live prices to overlay on top of DB values
+      fetchLivePrices(items);
     }).catch(function() {
       tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Could not load market movers.</td></tr>';
     });
