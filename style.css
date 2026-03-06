@@ -2981,3 +2981,223 @@ a:hover {
 .nav__link--active {
   color: var(--color-primary) !important;
 }
+
+/* ========================================
+   ADMIN TABS
+   ======================================== */
+
+.admin-tabs {
+  display: flex;
+  gap: var(--space-1);
+  margin-bottom: var(--space-4);
+  border-bottom: 1px solid var(--color-border);
+  padding-bottom: 0;
+}
+
+.admin-tab {
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  font-size: var(--text-sm);
+  padding: var(--space-2) var(--space-3);
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: all 0.2s ease;
+  font-family: inherit;
+}
+
+.admin-tab:hover {
+  color: var(--color-text);
+}
+
+.admin-tab.active {
+  color: var(--color-primary);
+  border-bottom-color: var(--color-primary);
+}
+
+/* ========================================
+   ADMIN SUBSCRIBERS VIEW
+   ======================================== */
+
+.admin-subscriber-stats {
+  display: flex;
+  gap: var(--space-4);
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  flex-wrap: wrap;
+}
+
+.admin-subscriber-stats .stat {
+  display: flex;
+  align-items: center;
+  gap: var(--space-1);
+}
+
+.admin-subscriber-stats .stat-number {
+  font-weight: 600;
+  color: var(--color-text);
+  font-size: var(--text-base);
+}
+
+.admin-subscriber-stats .stat-number.active {
+  color: #22c55e;
+}
+
+.admin-subscriber-stats .stat-number.unsub {
+  color: #f87171;
+}
+
+.admin-subscriber-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-1);
+  max-height: 50vh;
+  overflow-y: auto;
+  margin-top: var(--space-3);
+}
+
+.admin-subscriber-item {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border-radius: 8px;
+  font-size: var(--text-sm);
+}
+
+.admin-subscriber-item__email {
+  font-weight: 500;
+  color: var(--color-text);
+  word-break: break-all;
+}
+
+.admin-subscriber-item__meta {
+  display: flex;
+  align-items: center;
+  gap: var(--space-2);
+  color: var(--color-text-muted);
+  font-size: var(--text-xs);
+  flex-shrink: 0;
+}
+
+.admin-subscriber-item__badge {
+  display: inline-block;
+  padding: 2px 8px;
+  border-radius: 99px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.5px;
+}
+
+.admin-subscriber-item__badge.active {
+  background: rgba(34, 197, 94, 0.15);
+  color: #22c55e;
+}
+
+.admin-subscriber-item__badge.unsubscribed {
+  background: rgba(248, 113, 113, 0.15);
+  color: #f87171;
+}
+
+/* ========================================
+   NEWSLETTER COMPOSE
+   ======================================== */
+
+.newsletter-compose {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+}
+
+.nl-stories-list {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+  margin-bottom: var(--space-2);
+}
+
+.nl-story-item {
+  background: var(--color-surface-raised);
+  border-radius: 8px;
+  padding: var(--space-3);
+  position: relative;
+}
+
+.nl-story-item .admin-field {
+  margin-bottom: var(--space-2);
+}
+
+.nl-story-item .admin-field:last-child {
+  margin-bottom: 0;
+}
+
+.nl-story-item label {
+  font-size: var(--text-xs);
+  color: var(--color-text-muted);
+  margin-bottom: 2px;
+  display: block;
+}
+
+.nl-story-remove {
+  position: absolute;
+  top: var(--space-2);
+  right: var(--space-2);
+  background: none;
+  border: none;
+  color: var(--color-text-muted);
+  cursor: pointer;
+  padding: 4px;
+  line-height: 1;
+}
+
+.nl-story-remove:hover {
+  color: #f87171;
+}
+
+.nl-compose-actions {
+  display: flex;
+  gap: var(--space-2);
+  margin-top: var(--space-2);
+}
+
+.nl-compose-status {
+  font-size: var(--text-sm);
+  margin-top: var(--space-2);
+}
+
+.nl-preview-container {
+  margin-top: var(--space-4);
+  border: 1px solid var(--color-border);
+  border-radius: 8px;
+  overflow: hidden;
+}
+
+.nl-preview-header {
+  display: flex;
+  justify-content: space-between;
+  align-items: center;
+  padding: var(--space-2) var(--space-3);
+  background: var(--color-surface-raised);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.nl-preview-header h4 {
+  margin: 0;
+  font-size: var(--text-sm);
+  color: var(--color-text);
+}
+
+.nl-preview-frame {
+  background: #f8f9ff;
+  padding: var(--space-4);
+  max-height: 60vh;
+  overflow-y: auto;
+}
+
+.nl-preview-frame iframe {
+  width: 100%;
+  min-height: 600px;
+  border: none;
+}

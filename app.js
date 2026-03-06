@@ -479,7 +479,7 @@
   });
 
   // ========================================
-  // NEWSLETTER FORM (FormSubmit.co)
+  // NEWSLETTER FORM (Supabase + Resend)
   // ========================================
   var newsletterForm = document.getElementById('newsletter-form');
   if (newsletterForm) {
@@ -496,51 +496,37 @@
       var successEl = document.getElementById('newsletter-success');
       var errorEl = document.getElementById('newsletter-error');
 
-      // Disable button during submission
       if (btn) {
         btn.disabled = true;
         btn.textContent = 'Subscribing...';
       }
-
-      // Hide previous messages
       if (successEl) successEl.style.display = 'none';
       if (errorEl) errorEl.style.display = 'none';
 
-      // Build form data
-      var formData = new FormData();
-      formData.append('email', email);
-      formData.append('frequency', frequency);
-      formData.append('_subject', 'New Vidhai Newsletter Subscriber!');
-      formData.append('_autoresponse', 'Welcome to Vidhai! Thank you for subscribing to our newsletter. You will receive curated AI and semiconductor industry insights directly in your inbox. We are glad to have you on board. \u2014 Team Vidhai (vidhai.co)');
-      formData.append('_template', 'table');
-      formData.append('_captcha', 'false');
-
-      // Send via AJAX to FormSubmit.co
-      fetch('https://formsubmit.co/ajax/rsgowtham@gmail.com', {
+      fetch('/api/subscribers', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, frequency: frequency })
       })
-      .then(function(response) {
-        return response.json();
-      })
+      .then(function(response) { return response.json(); })
       .then(function(data) {
-        if (data.success === 'true' || data.success === true) {
+        if (data.success) {
           newsletterForm.style.display = 'none';
-          if (successEl) successEl.style.display = 'block';
-        } else {
-          if (errorEl) errorEl.style.display = 'block';
-          if (btn) {
-            btn.disabled = false;
-            btn.textContent = 'Subscribe';
+          if (successEl) {
+            successEl.textContent = data.message || 'Thanks for subscribing! Check your inbox for a welcome message.';
+            successEl.style.display = 'block';
           }
+        } else {
+          if (errorEl) {
+            errorEl.textContent = data.error || 'Something went wrong. Please try again.';
+            errorEl.style.display = 'block';
+          }
+          if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
         }
       })
       .catch(function() {
         if (errorEl) errorEl.style.display = 'block';
-        if (btn) {
-          btn.disabled = false;
-          btn.textContent = 'Subscribe';
-        }
+        if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
       });
     });
   }
@@ -1335,6 +1321,327 @@
   if (linkedinCancelBtn) {
     linkedinCancelBtn.addEventListener('click', function() {
       showAdminView('list');
+    });
+  }
+
+  // ========================================
+  // ADMIN TABS NAVIGATION
+  // ========================================
+
+  var adminTabsContainer = document.getElementById('admin-tabs');
+  if (adminTabsContainer) {
+    var tabButtons = adminTabsContainer.querySelectorAll('[data-admin-tab]');
+    tabButtons.forEach(function(tabBtn) {
+      tabBtn.addEventListener('click', function() {
+        var target = tabBtn.getAttribute('data-admin-tab');
+        tabButtons.forEach(function(b) { b.classList.remove('active'); });
+        tabBtn.classList.add('active');
+
+        if (target === 'posts') {
+          showAdminView('list');
+          renderAdminPostList();
+        } else if (target === 'subscribers') {
+          showAdminView('subscribers');
+          renderSubscriberList();
+        } else if (target === 'newsletter') {
+          showAdminView('newsletter');
+        }
+      });
+    });
+  }
+
+  // Show admin tabs when authenticated
+  var origSetAdminAuth = setAdminAuthenticated;
+  setAdminAuthenticated = function() {
+    origSetAdminAuth();
+    if (adminTabsContainer) adminTabsContainer.style.display = 'flex';
+  };
+
+  // ========================================
+  // SUBSCRIBERS ADMIN VIEW
+  // ========================================
+
+  function renderSubscriberList() {
+    var statsEl = document.getElementById('subscriber-stats');
+    var listEl = document.getElementById('admin-subscriber-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = '<p class="admin-empty">Loading subscribers...</p>';
+
+    fetch('/api/subscribers')
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        if (!Array.isArray(data)) {
+          listEl.innerHTML = '<p class="admin-empty">Could not load subscribers.</p>';
+          return;
+        }
+
+        var activeCount = data.filter(function(s) { return s.status === 'active'; }).length;
+        var unsubCount = data.filter(function(s) { return s.status === 'unsubscribed'; }).length;
+
+        if (statsEl) {
+          statsEl.innerHTML =
+            '<div class="stat"><span class="stat-number">' + data.length + '</span> total</div>' +
+            '<div class="stat"><span class="stat-number active">' + activeCount + '</span> active</div>' +
+            '<div class="stat"><span class="stat-number unsub">' + unsubCount + '</span> unsubscribed</div>';
+        }
+
+        if (data.length === 0) {
+          listEl.innerHTML = '<p class="admin-empty">No subscribers yet.</p>';
+          return;
+        }
+
+        listEl.innerHTML = data.map(function(sub) {
+          var dateStr = '';
+          try {
+            dateStr = new Date(sub.subscribed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+          } catch(e) { /* ignore */ }
+
+          var badgeClass = sub.status === 'active' ? 'active' : 'unsubscribed';
+
+          return '<div class="admin-subscriber-item">' +
+            '<span class="admin-subscriber-item__email">' + escapeHTML(sub.email) + '</span>' +
+            '<div class="admin-subscriber-item__meta">' +
+              '<span>' + escapeHTML(sub.frequency || 'weekly') + '</span>' +
+              '<span>' + dateStr + '</span>' +
+              '<span class="admin-subscriber-item__badge ' + badgeClass + '">' + escapeHTML(sub.status) + '</span>' +
+            '</div>' +
+          '</div>';
+        }).join('');
+      })
+      .catch(function() {
+        listEl.innerHTML = '<p class="admin-empty">Failed to load subscribers. Is the API connected?</p>';
+      });
+  }
+
+  // ========================================
+  // NEWSLETTER COMPOSE & SEND
+  // ========================================
+
+  var nlStories = [];
+
+  function renderNLStories() {
+    var listEl = document.getElementById('nl-stories-list');
+    if (!listEl) return;
+
+    listEl.innerHTML = nlStories.map(function(story, i) {
+      return '<div class="nl-story-item">' +
+        '<button type="button" class="nl-story-remove" data-remove-index="' + i + '">&times;</button>' +
+        '<div class="admin-field">' +
+          '<label>Headline #' + (i + 1) + '</label>' +
+          '<input type="text" class="admin-input nl-story-title" data-index="' + i + '" value="' + escapeHTML(story.title) + '" placeholder="Story headline">' +
+        '</div>' +
+        '<div class="admin-field">' +
+          '<label>Summary (bullet points, one per line)</label>' +
+          '<textarea class="admin-textarea nl-story-summary" data-index="' + i + '" rows="3" placeholder="Key point 1&#10;Key point 2">' + escapeHTML(story.summary) + '</textarea>' +
+        '</div>' +
+        '<div class="admin-field">' +
+          '<label>Source URL</label>' +
+          '<input type="text" class="admin-input nl-story-url" data-index="' + i + '" value="' + escapeHTML(story.url) + '" placeholder="https://...">' +
+        '</div>' +
+        '<div class="admin-field">' +
+          '<label>Source Name</label>' +
+          '<input type="text" class="admin-input nl-story-source" data-index="' + i + '" value="' + escapeHTML(story.source) + '" placeholder="e.g. Reuters, Bloomberg">' +
+        '</div>' +
+      '</div>';
+    }).join('');
+
+    // Bind remove buttons
+    listEl.querySelectorAll('[data-remove-index]').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        syncNLStories();
+        nlStories.splice(parseInt(btn.getAttribute('data-remove-index'), 10), 1);
+        renderNLStories();
+      });
+    });
+  }
+
+  function syncNLStories() {
+    document.querySelectorAll('.nl-story-title').forEach(function(inp) {
+      var idx = parseInt(inp.getAttribute('data-index'), 10);
+      if (nlStories[idx]) nlStories[idx].title = inp.value;
+    });
+    document.querySelectorAll('.nl-story-summary').forEach(function(ta) {
+      var idx = parseInt(ta.getAttribute('data-index'), 10);
+      if (nlStories[idx]) nlStories[idx].summary = ta.value;
+    });
+    document.querySelectorAll('.nl-story-url').forEach(function(inp) {
+      var idx = parseInt(inp.getAttribute('data-index'), 10);
+      if (nlStories[idx]) nlStories[idx].url = inp.value;
+    });
+    document.querySelectorAll('.nl-story-source').forEach(function(inp) {
+      var idx = parseInt(inp.getAttribute('data-index'), 10);
+      if (nlStories[idx]) nlStories[idx].source = inp.value;
+    });
+  }
+
+  var nlAddStoryBtn = document.getElementById('nl-add-story');
+  if (nlAddStoryBtn) {
+    nlAddStoryBtn.addEventListener('click', function() {
+      if (nlStories.length >= 6) {
+        alert('Maximum 6 stories per newsletter.');
+        return;
+      }
+      syncNLStories();
+      nlStories.push({ title: '', summary: '', url: '', source: '' });
+      renderNLStories();
+    });
+  }
+
+  // Build newsletter HTML
+  function buildNewsletterHTML() {
+    syncNLStories();
+    var subject = (document.getElementById('nl-subject') || {}).value || 'Vidhai Newsletter';
+    var quickReadsText = (document.getElementById('nl-quick-reads') || {}).value || '';
+
+    var today = new Date();
+    var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+    var dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+
+    // Build stories HTML
+    var storiesHTML = '';
+    nlStories.forEach(function(story, i) {
+      if (!story.title) return;
+      var bullets = story.summary.split('\n').filter(function(l) { return l.trim(); }).map(function(line) {
+        return '<li style="margin:0;padding:4px 0;font-size:14px;color:#334155;line-height:1.7;">' + escapeHTML(line.trim()) + '</li>';
+      }).join('');
+
+      storiesHTML +=
+        '<div style="margin-bottom:32px;">' +
+          '<h2 style="font-size:18px;color:#0f172a;margin:0 0 8px 0;font-weight:600;">' +
+            (i + 1) + '. ' + (story.url ? '<a href="' + escapeHTML(story.url) + '" style="color:#0f172a;text-decoration:none;">' + escapeHTML(story.title) + '</a>' : escapeHTML(story.title)) +
+          '</h2>' +
+          (story.source ? '<p style="font-size:12px;color:#94a3b8;margin:0 0 8px 0;font-style:italic;">' + (story.url ? '<a href="' + escapeHTML(story.url) + '" style="color:#94a3b8;text-decoration:underline;">' + escapeHTML(story.source) + '</a>' : escapeHTML(story.source)) + '</p>' : '') +
+          (bullets ? '<ul style="margin:0;padding-left:20px;">' + bullets + '</ul>' : '') +
+        '</div>';
+    });
+
+    // Build quick reads HTML
+    var quickReadsHTML = '';
+    var quickLines = quickReadsText.split('\n').filter(function(l) { return l.trim(); });
+    if (quickLines.length > 0) {
+      var qItems = quickLines.map(function(line) {
+        var parts = line.split(' \u2014 ');
+        if (parts.length < 2) parts = line.split(' - ');
+        var title = parts[0] ? parts[0].trim() : line.trim();
+        var url = parts[1] ? parts[1].trim() : '';
+        if (url) {
+          return '<li style="margin:4px 0;font-size:14px;line-height:1.6;"><a href="' + escapeHTML(url) + '" style="color:#0ea5e9;text-decoration:none;font-weight:500;">' + escapeHTML(title) + '</a></li>';
+        }
+        return '<li style="margin:4px 0;font-size:14px;line-height:1.6;color:#334155;">' + escapeHTML(title) + '</li>';
+      }).join('');
+
+      quickReadsHTML =
+        '<div style="margin-top:16px;padding-top:24px;border-top:1px solid #e2e8f0;">' +
+          '<h3 style="font-size:16px;color:#0f172a;margin:0 0 12px 0;font-weight:600;">Quick Reads</h3>' +
+          '<ul style="margin:0;padding-left:20px;">' + qItems + '</ul>' +
+        '</div>';
+    }
+
+    var unsubUrl = '{{UNSUBSCRIBE_URL}}';
+
+    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+      '<body style="margin:0;padding:0;background:#f8f9ff;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">' +
+      '<div style="max-width:560px;margin:0 auto;padding:40px 20px;">' +
+        '<div style="background:#ffffff;border-radius:12px;padding:40px 32px;border:1px solid #e2e8f0;">' +
+          '<div style="text-align:center;margin-bottom:32px;">' +
+            '<h1 style="font-size:22px;color:#0f172a;margin:0 0 4px 0;">Vidhai</h1>' +
+            '<p style="color:#64748b;font-size:13px;margin:0 0 4px 0;">AI Takes Root</p>' +
+            '<p style="color:#94a3b8;font-size:12px;margin:0;">' + dateStr + '</p>' +
+          '</div>' +
+          storiesHTML +
+          quickReadsHTML +
+          '<div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;">' +
+            '<p style="color:#334155;font-size:14px;line-height:1.7;margin:0 0 16px 0;">Thanks for reading. Visit <a href="https://vidhai.co" style="color:#0ea5e9;text-decoration:none;font-weight:500;">vidhai.co</a> for more.</p>' +
+          '</div>' +
+        '</div>' +
+        '<div style="text-align:center;margin-top:24px;">' +
+          '<p style="color:#94a3b8;font-size:11px;margin:0;">' +
+            '<a href="' + unsubUrl + '" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> &middot; ' +
+            '<a href="https://vidhai.co" style="color:#94a3b8;text-decoration:underline;">vidhai.co</a>' +
+          '</p>' +
+        '</div>' +
+      '</div>' +
+      '</body></html>';
+  }
+
+  // Preview button
+  var nlPreviewBtn = document.getElementById('nl-preview-btn');
+  if (nlPreviewBtn) {
+    nlPreviewBtn.addEventListener('click', function() {
+      var html = buildNewsletterHTML().replace(/{{UNSUBSCRIBE_URL}}/g, '#');
+      var previewContainer = document.getElementById('nl-preview-container');
+      var previewFrame = document.getElementById('nl-preview-frame');
+      if (previewContainer && previewFrame) {
+        previewFrame.innerHTML = '<iframe srcdoc="' + html.replace(/"/g, '&quot;') + '"></iframe>';
+        previewContainer.style.display = 'block';
+      }
+    });
+  }
+
+  var nlPreviewClose = document.getElementById('nl-preview-close');
+  if (nlPreviewClose) {
+    nlPreviewClose.addEventListener('click', function() {
+      var previewContainer = document.getElementById('nl-preview-container');
+      if (previewContainer) previewContainer.style.display = 'none';
+    });
+  }
+
+  // Send button
+  var nlSendBtn = document.getElementById('nl-send-btn');
+  if (nlSendBtn) {
+    nlSendBtn.addEventListener('click', function() {
+      var subject = (document.getElementById('nl-subject') || {}).value;
+      if (!subject) {
+        alert('Please enter a subject line.');
+        return;
+      }
+
+      syncNLStories();
+      var hasContent = nlStories.some(function(s) { return s.title; }) || (document.getElementById('nl-quick-reads') || {}).value.trim();
+      if (!hasContent) {
+        alert('Add at least one story or quick read.');
+        return;
+      }
+
+      if (!confirm('Send this newsletter to all active subscribers? This cannot be undone.')) return;
+
+      var htmlContent = buildNewsletterHTML();
+      var audience = (document.getElementById('nl-audience') || {}).value || 'all';
+      var statusEl = document.getElementById('nl-compose-status');
+
+      nlSendBtn.disabled = true;
+      nlSendBtn.textContent = 'Sending...';
+      if (statusEl) statusEl.style.display = 'none';
+
+      fetch('/api/newsletter-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: subject,
+          htmlContent: htmlContent,
+          frequency: audience
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        nlSendBtn.disabled = false;
+        nlSendBtn.textContent = 'Send Newsletter';
+        if (statusEl) {
+          statusEl.textContent = data.success ? ('\u2705 ' + data.message) : ('\u274c ' + (data.error || 'Failed to send.'));
+          statusEl.style.display = 'block';
+          statusEl.style.color = data.success ? '#22c55e' : '#f87171';
+        }
+      })
+      .catch(function(err) {
+        nlSendBtn.disabled = false;
+        nlSendBtn.textContent = 'Send Newsletter';
+        if (statusEl) {
+          statusEl.textContent = '\u274c Network error. Please try again.';
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#f87171';
+        }
+      });
     });
   }
 

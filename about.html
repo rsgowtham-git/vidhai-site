@@ -30,21 +30,22 @@
 
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>About — Vidhai | AI Takes Root</title>
-<meta name="description" content="Learn about Vidhai, the AI content platform founded by Gowtham. Combining industry experience in manufacturing and quality with a passion for AI technology.">
+<title>About Vidhai (vidhai.co) — AI News, Semiconductor Insights & Tools</title>
+<meta name="description" content="Vidhai (vidhai.co) is an AI news and semiconductor insights platform founded by Gowtham. Curated AI model releases, chip industry analysis, training resources, and practical AI tools — bridging manufacturing expertise with cutting-edge technology.">
 <link rel="canonical" href="https://www.vidhai.co/about.html">
+<meta name="keywords" content="Vidhai, vidhai.co, AI news platform, semiconductor insights, AI tools, AI blog, Gowtham, manufacturing AI, chip industry news">
 
 <!-- Open Graph -->
-<meta property="og:title" content="About Vidhai — Where AI Takes Root">
-<meta property="og:description" content="Learn about Vidhai, the AI content platform bridging manufacturing expertise with AI technology.">
+<meta property="og:title" content="About Vidhai (vidhai.co) — AI News, Semiconductor Insights & Tools">
+<meta property="og:description" content="Vidhai (vidhai.co) is an AI news and semiconductor insights platform. Curated AI model releases, chip industry analysis, and practical AI tools by Gowtham.">
 <meta property="og:type" content="website">
 <meta property="og:url" content="https://www.vidhai.co/about.html">
-<meta property="og:site_name" content="Vidhai">
+<meta property="og:site_name" content="Vidhai — AI Takes Root">
 
 <!-- Twitter -->
 <meta name="twitter:card" content="summary_large_image">
-<meta name="twitter:title" content="About Vidhai — Where AI Takes Root">
-<meta name="twitter:description" content="Learn about Vidhai, the AI content platform bridging manufacturing expertise with AI technology.">
+<meta name="twitter:title" content="About Vidhai (vidhai.co) — AI News & Semiconductor Insights">
+<meta name="twitter:description" content="Vidhai (vidhai.co) curates AI news, semiconductor insights, training resources, and practical AI tools. Founded by Gowtham.">
 
 <!-- Preconnect -->
 <link rel="preconnect" href="https://fonts.googleapis.com">
@@ -59,19 +60,32 @@
 {
   "@context": "https://schema.org",
   "@type": "AboutPage",
-  "name": "About Vidhai",
+  "name": "About Vidhai — AI News & Semiconductor Insights Platform",
   "url": "https://vidhai.co/about.html",
-  "description": "Learn about Vidhai, the AI content platform bridging manufacturing expertise with AI technology.",
+  "description": "Vidhai (vidhai.co) is an AI news and semiconductor insights platform curating model releases, chip industry analysis, training resources, and practical AI tools.",
   "mainEntity": {
     "@type": "Organization",
     "name": "Vidhai",
+    "alternateName": "Vidhai — AI Takes Root",
     "url": "https://vidhai.co",
+    "sameAs": [
+      "https://linkedin.com/company/vidh-ai",
+      "https://www.linkedin.com/in/gowthamanrajusujatha/"
+    ],
+    "description": "Vidhai (vidhai.co) is an AI news, semiconductor insights, and technology platform. Not affiliated with Vidhai Foundation, Vidhai Trust, or any other organization using the name Vidhai.",
+    "foundingDate": "2026",
     "founder": {
       "@type": "Person",
       "name": "Gowtham",
       "jobTitle": "Founder",
       "url": "https://www.linkedin.com/in/gowthamanrajusujatha/"
-    }
+    },
+    "knowsAbout": ["Artificial Intelligence", "Semiconductor Industry", "AI News", "Machine Learning", "Manufacturing Technology"]
+  },
+  "creator": {
+    "@type": "SoftwareApplication",
+    "name": "Perplexity Computer",
+    "url": "https://www.perplexity.ai/computer"
   }
 }
 </script>
@@ -140,8 +154,8 @@
 
   <!-- HERO -->
   <section class="hero">
-    <h1 class="hero__title reveal">About Vidhai</h1>
-    <p class="hero__tagline reveal">Where AI Takes Root — விதை</p>
+    <h1 class="hero__title reveal">About Vidhai <small style="font-size:0.5em;opacity:0.6;font-weight:400;">vidhai.co</small></h1>
+    <p class="hero__tagline reveal">Where AI Takes Root — விதை ("seed" in Tamil)</p>
   </section>
 
   <!-- STORY SECTION -->
@@ -151,7 +165,7 @@
     </div>
     <div class="about-prose reveal">
       <p>
-        <strong>Vidhai (விதை)</strong> means "seed" in Tamil — the beginning of something that grows.
+        <strong>Vidhai (விதை)</strong> means "seed" in Tamil — the beginning of something that grows. <strong>Vidhai at <a href="https://vidhai.co" style="color:var(--color-accent);">vidhai.co</a></strong> is an independent AI news and semiconductor insights platform — not affiliated with any other organization using the name "Vidhai."
       </p>
       <p>
         Founded by Gowtham, a professional bridging manufacturing, quality engineering, and AI technology, Vidhai was created to be the resource he wished existed when navigating the rapidly evolving AI landscape.
@@ -432,25 +446,21 @@
       if (btn) { btn.disabled = true; btn.textContent = 'Subscribing...'; }
       if (successEl) successEl.style.display = 'none';
 
-      var formData = new FormData();
-      formData.append('email', email);
-      formData.append('frequency', frequency);
-      formData.append('_subject', 'New Vidhai Newsletter Subscriber!');
-      formData.append('_autoresponse', 'Welcome to Vidhai! Thank you for subscribing to our newsletter. You will receive curated AI and semiconductor industry insights directly in your inbox. We are glad to have you on board. \u2014 Team Vidhai (vidhai.co)');
-      formData.append('_template', 'table');
-      formData.append('_captcha', 'false');
-
-      fetch('https://formsubmit.co/ajax/rsgowtham@gmail.com', {
+      fetch('/api/subscribers', {
         method: 'POST',
-        body: formData
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({ email: email, frequency: frequency })
       })
       .then(function(response) { return response.json(); })
       .then(function(data) {
-        if (data.success === 'true' || data.success === true) {
-          newsletterForm.style.display = 'none';
-          if (successEl) successEl.style.display = 'block';
-        } else {
+        if (data.error) {
           if (btn) { btn.disabled = false; btn.textContent = 'Subscribe'; }
+          return;
+        }
+        newsletterForm.style.display = 'none';
+        if (successEl) {
+          successEl.textContent = data.message || 'Thanks for subscribing! Check your inbox for a welcome message.';
+          successEl.style.display = 'block';
         }
       })
       .catch(function() {
