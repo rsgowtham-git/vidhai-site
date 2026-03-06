@@ -124,6 +124,7 @@
       <li><a href="#semiconductors">Semiconductors</a></li>
       <li><a href="#training">Training</a></li>
       <li><a href="#industries">Industries</a></li>
+      <li><a href="#investments">Investments</a></li>
       <li><a href="#tools">Tools</a></li>
       <li><a href="#blog">Blog</a></li>
       <li><a href="./about.html">About</a></li>
@@ -146,6 +147,7 @@
   <a href="#semiconductors" data-mobile-link>Semiconductors</a>
   <a href="#training" data-mobile-link>Training</a>
   <a href="#industries" data-mobile-link>Industries</a>
+  <a href="#investments" data-mobile-link>Investments</a>
   <a href="#tools" data-mobile-link>Tools</a>
   <a href="#blog" data-mobile-link>Blog</a>
   <a href="./about.html" data-mobile-link>About</a>
@@ -231,6 +233,61 @@
     </div>
     <div id="industry-cards" class="card-grid card-grid--3 stagger">
       <!-- Populated dynamically by JS from industry_impact table -->
+    </div>
+  </section>
+
+  <!-- INVESTMENTS -->
+  <section id="investments" class="section">
+    <div class="section__header reveal">
+      <h2 class="section__title">Investments</h2>
+      <p class="section__subtitle">AI &amp; semiconductor market movers, interactive charts, and upcoming IPOs</p>
+    </div>
+
+    <!-- Allocation badges -->
+    <div class="invest-alloc reveal">
+      <span class="invest-alloc__badge invest-alloc__badge--ai">AI 50%</span>
+      <span class="invest-alloc__badge invest-alloc__badge--semi">Semiconductor 30%</span>
+      <span class="invest-alloc__badge invest-alloc__badge--other">Other 20%</span>
+    </div>
+
+    <!-- Market Movers -->
+    <div class="invest-movers reveal">
+      <h3 class="invest-subtitle">Top 10 Market Movers</h3>
+      <div class="invest-movers__table-wrap">
+        <table class="invest-movers__table" id="market-movers-table">
+          <thead>
+            <tr>
+              <th>Ticker</th>
+              <th>Company</th>
+              <th>Price</th>
+              <th>Change</th>
+              <th>% Change</th>
+              <th>Mkt Cap</th>
+              <th>Sector</th>
+            </tr>
+          </thead>
+          <tbody id="market-movers-body">
+            <!-- Populated dynamically from market_movers table -->
+          </tbody>
+        </table>
+      </div>
+    </div>
+
+    <!-- Interactive Chart -->
+    <div class="invest-chart reveal">
+      <h3 class="invest-subtitle">Market Performance</h3>
+      <p class="invest-chart__hint">S&amp;P 500 and Nasdaq shown by default. Use the toolbar to add any ticker for comparison.</p>
+      <div class="invest-chart__container" id="invest-chart-container">
+        <!-- TradingView Advanced Chart Widget inserted by JS -->
+      </div>
+    </div>
+
+    <!-- Upcoming IPOs -->
+    <div class="invest-ipos reveal">
+      <h3 class="invest-subtitle">Upcoming IPOs to Watch</h3>
+      <div id="ipo-cards" class="card-grid card-grid--3 stagger">
+        <!-- Populated dynamically from upcoming_ipos table -->
+      </div>
     </div>
   </section>
 
@@ -351,6 +408,8 @@
       <button class="admin-tab" data-admin-tab="content-industry">Industry</button>
       <button class="admin-tab" data-admin-tab="content-tools">Tools</button>
       <button class="admin-tab" data-admin-tab="content-ticker">Ticker</button>
+      <button class="admin-tab" data-admin-tab="content-movers">Movers</button>
+      <button class="admin-tab" data-admin-tab="content-ipos">IPOs</button>
       <button class="admin-tab" data-admin-tab="subscribers">Subscribers</button>
       <button class="admin-tab" data-admin-tab="newsletter">Newsletter</button>
     </div>
@@ -508,6 +567,26 @@
       <div id="admin-content-ticker-list" class="admin-post-list"></div>
     </div>
 
+    <div data-admin-view="content-movers" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="market_movers">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Market Mover
+        </button>
+      </div>
+      <div id="admin-content-movers-list" class="admin-post-list"></div>
+    </div>
+
+    <div data-admin-view="content-ipos" style="display:none">
+      <div class="admin-toolbar">
+        <button class="admin-btn admin-btn--primary" data-content-add="upcoming_ipos">
+          <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+          Add Upcoming IPO
+        </button>
+      </div>
+      <div id="admin-content-ipos-list" class="admin-post-list"></div>
+    </div>
+
     <!-- Content Edit Form (shared for all content types) -->
     <div data-admin-view="content-form" style="display:none">
       <h3 class="admin-editor-title" id="content-form-title">Add Item</h3>
@@ -652,6 +731,7 @@
         <a href="#semiconductors">Semiconductors</a>
         <a href="#training">Training</a>
         <a href="#industries">Industries</a>
+        <a href="#investments">Investments</a>
         <a href="#tools">Tools</a>
         <a href="#blog">Blog</a>
         <a href="./about.html">About</a>
@@ -678,6 +758,7 @@
 <noscript><style>.reveal,.stagger,.stagger>*{opacity:1!important;}</style></noscript>
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
+<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

@@ -3323,3 +3323,325 @@ a:hover {
 #content-form-fields select.admin-input {
   appearance: auto;
 }
+
+/* ========================================
+   INVESTMENTS SECTION
+   ======================================== */
+
+/* --- Allocation Badges --- */
+.invest-alloc {
+  display: flex;
+  gap: var(--space-3);
+  justify-content: center;
+  flex-wrap: wrap;
+  margin-bottom: var(--space-8);
+  max-width: var(--content-wide);
+  margin-left: auto;
+  margin-right: auto;
+  padding: 0 var(--space-6);
+}
+
+.invest-alloc__badge {
+  display: inline-flex;
+  align-items: center;
+  padding: var(--space-2) var(--space-4);
+  border-radius: var(--radius-full);
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+}
+
+.invest-alloc__badge--ai {
+  background: rgba(56, 189, 248, 0.12);
+  color: var(--color-accent-blue);
+  border: 1px solid rgba(56, 189, 248, 0.25);
+}
+
+.invest-alloc__badge--semi {
+  background: rgba(167, 139, 250, 0.12);
+  color: var(--color-accent-violet);
+  border: 1px solid rgba(167, 139, 250, 0.25);
+}
+
+.invest-alloc__badge--other {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--color-text-muted);
+  border: 1px solid var(--color-border);
+}
+
+/* --- Invest Subtitle --- */
+.invest-subtitle {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 600;
+  color: var(--color-text);
+  margin-bottom: var(--space-4);
+}
+
+/* --- Market Movers Table --- */
+.invest-movers {
+  max-width: var(--content-wide);
+  margin: 0 auto var(--space-12);
+  padding: 0 var(--space-6);
+}
+
+.invest-movers__table-wrap {
+  overflow-x: auto;
+  -webkit-overflow-scrolling: touch;
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  background: var(--color-surface);
+}
+
+.invest-movers__table {
+  width: 100%;
+  border-collapse: collapse;
+  font-size: var(--text-sm);
+  white-space: nowrap;
+}
+
+.invest-movers__table thead {
+  background: var(--color-surface-2);
+}
+
+.invest-movers__table th {
+  padding: var(--space-3) var(--space-4);
+  text-align: left;
+  font-size: var(--text-xs);
+  font-weight: 700;
+  letter-spacing: 0.04em;
+  text-transform: uppercase;
+  color: var(--color-text-muted);
+  border-bottom: 1px solid var(--color-border);
+}
+
+.invest-movers__table td {
+  padding: var(--space-3) var(--space-4);
+  border-bottom: 1px solid var(--color-divider);
+  color: var(--color-text);
+}
+
+.invest-movers__table tbody tr:last-child td {
+  border-bottom: none;
+}
+
+.invest-movers__table tbody tr:nth-child(even) {
+  background: var(--color-primary-highlight);
+}
+
+.invest-movers__table tbody tr:hover {
+  background: var(--color-primary-muted);
+}
+
+.invest-ticker {
+  font-family: 'SF Mono', 'Fira Code', 'Cascadia Code', monospace;
+  font-weight: 700;
+  color: var(--color-text);
+  letter-spacing: 0.02em;
+}
+
+.invest-change--up {
+  color: #22c55e;
+  font-weight: 600;
+}
+
+.invest-change--down {
+  color: #ef4444;
+  font-weight: 600;
+}
+
+/* --- Category Badges (inline table badges) --- */
+.invest-badge {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 700;
+  letter-spacing: 0.03em;
+  text-transform: uppercase;
+}
+
+.invest-badge--ai {
+  background: rgba(56, 189, 248, 0.15);
+  color: var(--color-accent-blue);
+}
+
+.invest-badge--semi {
+  background: rgba(167, 139, 250, 0.15);
+  color: var(--color-accent-violet);
+}
+
+.invest-badge--other {
+  background: rgba(148, 163, 184, 0.15);
+  color: var(--color-text-muted);
+}
+
+/* --- IPO Status Badges --- */
+.invest-status {
+  display: inline-block;
+  padding: 2px var(--space-2);
+  border-radius: var(--radius-sm);
+  font-size: 0.6875rem;
+  font-weight: 600;
+  letter-spacing: 0.03em;
+}
+
+.invest-status--filed {
+  background: rgba(34, 197, 94, 0.12);
+  color: #22c55e;
+}
+
+.invest-status--preparing {
+  background: rgba(251, 191, 36, 0.12);
+  color: var(--color-accent-amber);
+}
+
+.invest-status--early {
+  background: rgba(148, 163, 184, 0.12);
+  color: var(--color-text-muted);
+}
+
+/* --- TradingView Chart --- */
+.invest-chart {
+  max-width: var(--content-wide);
+  margin: 0 auto var(--space-12);
+  padding: 0 var(--space-6);
+}
+
+.invest-chart__hint {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  margin-bottom: var(--space-4);
+}
+
+.invest-chart__container {
+  width: 100%;
+  height: 500px;
+  border-radius: var(--radius-lg);
+  overflow: hidden;
+  border: 1px solid var(--color-border);
+  background: var(--color-surface);
+}
+
+/* --- IPO Cards --- */
+.invest-ipos {
+  max-width: var(--content-wide);
+  margin: 0 auto;
+  padding: 0 var(--space-6);
+}
+
+.ipo-card {
+  background: var(--color-surface);
+  border: 1px solid var(--color-border);
+  border-radius: var(--radius-lg);
+  padding: var(--space-5);
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-3);
+  transition: border-color var(--transition-interactive), box-shadow var(--transition-interactive);
+}
+
+.ipo-card:hover {
+  border-color: var(--color-primary);
+  box-shadow: var(--shadow-md);
+}
+
+.ipo-card__header {
+  display: flex;
+  flex-direction: column;
+  gap: var(--space-2);
+}
+
+.ipo-card__name {
+  font-family: var(--font-display);
+  font-size: var(--text-lg);
+  font-weight: 700;
+  color: var(--color-text);
+  margin: 0;
+}
+
+.ipo-card__badges {
+  display: flex;
+  gap: var(--space-2);
+  flex-wrap: wrap;
+}
+
+.ipo-card__details {
+  display: flex;
+  gap: var(--space-6);
+  flex-wrap: wrap;
+}
+
+.ipo-card__detail {
+  display: flex;
+  flex-direction: column;
+  gap: 2px;
+}
+
+.ipo-card__label {
+  font-size: var(--text-xs);
+  font-weight: 600;
+  color: var(--color-text-faint);
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+}
+
+.ipo-card__value {
+  font-size: var(--text-sm);
+  font-weight: 600;
+  color: var(--color-text);
+}
+
+.ipo-card__desc {
+  font-size: var(--text-sm);
+  color: var(--color-text-muted);
+  line-height: 1.55;
+  margin: 0;
+  display: -webkit-box;
+  -webkit-line-clamp: 3;
+  -webkit-box-orient: vertical;
+  overflow: hidden;
+}
+
+.ipo-card__source {
+  display: inline-flex;
+  align-items: center;
+  gap: var(--space-1);
+  font-size: var(--text-xs);
+  color: var(--color-primary);
+  font-weight: 500;
+  margin-top: auto;
+}
+
+.ipo-card__source svg {
+  width: 12px;
+  height: 12px;
+}
+
+.ipo-card__source:hover {
+  color: var(--color-primary-hover);
+}
+
+/* --- Investments Mobile Responsive --- */
+@media (max-width: 768px) {
+  .invest-alloc {
+    gap: var(--space-2);
+  }
+
+  .invest-alloc__badge {
+    font-size: 0.6875rem;
+    padding: var(--space-1) var(--space-3);
+  }
+
+  .invest-movers__table-wrap {
+    margin: 0 calc(-1 * var(--space-4));
+    border-radius: 0;
+    border-left: none;
+    border-right: none;
+  }
+
+  .invest-chart__container {
+    height: 400px;
+  }
+}

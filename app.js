@@ -2346,6 +2346,115 @@
   }
 
   // ========================================
+  // INVESTMENTS — Market Movers, Chart, IPOs
+  // ========================================
+
+  function getCategoryBadgeClass(category) {
+    var c = (category || '').toLowerCase();
+    if (c === 'ai') return 'invest-badge--ai';
+    if (c === 'semiconductor') return 'invest-badge--semi';
+    return 'invest-badge--other';
+  }
+
+  function renderMarketMovers() {
+    var tbody = document.getElementById('market-movers-body');
+    if (!tbody) return;
+
+    fetchContent('market_movers').then(function(items) {
+      if (!items || !items.length) {
+        tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">No market movers data yet.</td></tr>';
+        return;
+      }
+      tbody.innerHTML = items.map(function(item) {
+        var changeNum = parseFloat(item.change) || 0;
+        var changePctNum = parseFloat(item.change_percent) || 0;
+        var changeClass = changeNum >= 0 ? 'invest-change--up' : 'invest-change--down';
+        var changeSign = changeNum >= 0 ? '+' : '';
+        var pctSign = changePctNum >= 0 ? '+' : '';
+
+        return '<tr>' +
+          '<td class="invest-ticker">' + escapeHTML(item.ticker) + '</td>' +
+          '<td>' + escapeHTML(item.company_name) + '</td>' +
+          '<td>$' + escapeHTML(String(item.price)) + '</td>' +
+          '<td class="' + changeClass + '">' + changeSign + escapeHTML(String(item.change)) + '</td>' +
+          '<td class="' + changeClass + '">' + pctSign + escapeHTML(String(item.change_percent)) + '%</td>' +
+          '<td>' + escapeHTML(item.market_cap || '') + '</td>' +
+          '<td><span class="invest-badge ' + getCategoryBadgeClass(item.category) + '">' + escapeHTML(item.category || '') + '</span></td>' +
+        '</tr>';
+      }).join('');
+    }).catch(function() {
+      tbody.innerHTML = '<tr><td colspan="7" class="admin-empty">Could not load market movers.</td></tr>';
+    });
+  }
+
+  function renderUpcomingIPOs() {
+    var container = document.getElementById('ipo-cards');
+    if (!container) return;
+
+    fetchContent('upcoming_ipos').then(function(items) {
+      if (!items || !items.length) {
+        container.innerHTML = '<p class="admin-empty">No upcoming IPOs yet.</p>';
+        return;
+      }
+      container.innerHTML = items.map(function(item) {
+        var statusClass = '';
+        var s = (item.status || '').toLowerCase();
+        if (s === 'filed') statusClass = 'invest-status--filed';
+        else if (s === 'preparing') statusClass = 'invest-status--preparing';
+        else statusClass = 'invest-status--early';
+
+        return '<article class="ipo-card">' +
+          '<div class="ipo-card__header">' +
+            '<h4 class="ipo-card__name">' + escapeHTML(item.company_name) + '</h4>' +
+            '<div class="ipo-card__badges">' +
+              '<span class="invest-badge ' + getCategoryBadgeClass(item.category) + '">' + escapeHTML(item.category || '') + '</span>' +
+              '<span class="invest-status ' + statusClass + '">' + escapeHTML(item.status || '') + '</span>' +
+            '</div>' +
+          '</div>' +
+          '<div class="ipo-card__details">' +
+            '<div class="ipo-card__detail"><span class="ipo-card__label">Expected</span><span class="ipo-card__value">' + escapeHTML(item.expected_date || 'TBD') + '</span></div>' +
+            '<div class="ipo-card__detail"><span class="ipo-card__label">Valuation</span><span class="ipo-card__value">' + escapeHTML(item.estimated_valuation || 'TBD') + '</span></div>' +
+          '</div>' +
+          '<p class="ipo-card__desc">' + escapeHTML(item.description || '') + '</p>' +
+          (item.source_url ? '<a href="' + escapeHTML(item.source_url) + '" target="_blank" rel="noopener noreferrer" class="ipo-card__source">' + sourceLinkSVG + ' Source</a>' : '') +
+        '</article>';
+      }).join('');
+      container.classList.remove('is-visible');
+      requestAnimationFrame(function() { container.classList.add('is-visible'); });
+    }).catch(function() {
+      container.innerHTML = '<p class="admin-empty">Could not load upcoming IPOs.</p>';
+    });
+  }
+
+  function initTradingViewChart() {
+    var chartContainer = document.getElementById('invest-chart-container');
+    if (!chartContainer) return;
+    if (typeof TradingView === 'undefined') return;
+
+    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
+
+    // Clear previous content
+    chartContainer.innerHTML = '<div id="tradingview_chart" style="height:500px;"></div>';
+
+    new TradingView.widget({ // eslint-disable-line no-undef
+      'autosize': true,
+      'symbol': 'AMEX:SPY',
+      'interval': 'D',
+      'timezone': 'America/Los_Angeles',
+      'theme': isDark ? 'dark' : 'light',
+      'style': '2',
+      'locale': 'en',
+      'enable_publishing': false,
+      'allow_symbol_change': true,
+      'hide_side_toolbar': false,
+      'studies': [],
+      'container_id': 'tradingview_chart',
+      'height': 500,
+      'width': '100%'
+    });
+  }
+
+  // ========================================
   // ADMIN CONTENT CRUD
   // ========================================
 
@@ -2359,7 +2468,9 @@
     training_courses: 'content-training',
     industry_impact: 'content-industry',
     ai_tools: 'content-tools',
-    breaking_news: 'content-ticker'
+    breaking_news: 'content-ticker',
+    market_movers: 'content-movers',
+    upcoming_ipos: 'content-ipos'
   };
 
   var tableListMap = {
@@ -2368,7 +2479,9 @@
     training_courses: 'admin-content-training-list',
     industry_impact: 'admin-content-industry-list',
     ai_tools: 'admin-content-tools-list',
-    breaking_news: 'admin-content-ticker-list'
+    breaking_news: 'admin-content-ticker-list',
+    market_movers: 'admin-content-movers-list',
+    upcoming_ipos: 'admin-content-ipos-list'
   };
 
   // Form field definitions for each table
@@ -2432,12 +2545,36 @@
       { key: 'source_url', label: 'Source URL', type: 'text', placeholder: 'https://...' },
       { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
       { key: 'is_active', label: 'Active', type: 'toggle' }
+    ],
+    market_movers: [
+      { key: 'ticker', label: 'Ticker', type: 'text', placeholder: 'e.g. NVDA', required: true },
+      { key: 'company_name', label: 'Company Name', type: 'text', placeholder: 'e.g. NVIDIA Corporation', required: true },
+      { key: 'price', label: 'Price', type: 'text', placeholder: 'e.g. 875.50' },
+      { key: 'change', label: 'Change ($)', type: 'text', placeholder: 'e.g. 12.30 or -5.20' },
+      { key: 'change_percent', label: 'Change (%)', type: 'text', placeholder: 'e.g. 1.42 or -0.60' },
+      { key: 'market_cap', label: 'Market Cap', type: 'text', placeholder: 'e.g. $2.15T' },
+      { key: 'category', label: 'Category', type: 'select', options: ['AI', 'Semiconductor', 'Other'] },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
+    ],
+    upcoming_ipos: [
+      { key: 'company_name', label: 'Company Name', type: 'text', placeholder: 'e.g. Databricks', required: true },
+      { key: 'description', label: 'Description', type: 'textarea', placeholder: 'Brief company description' },
+      { key: 'estimated_valuation', label: 'Estimated Valuation', type: 'text', placeholder: 'e.g. $43B' },
+      { key: 'expected_date', label: 'Expected Date', type: 'text', placeholder: 'e.g. H2 2026' },
+      { key: 'category', label: 'Category', type: 'select', options: ['AI', 'Semiconductor', 'Other'] },
+      { key: 'status', label: 'Status', type: 'select', options: ['Preparing', 'Filed', 'Early Stage'] },
+      { key: 'source_url', label: 'Source URL', type: 'text', placeholder: 'https://...' },
+      { key: 'sort_order', label: 'Sort Order', type: 'number', placeholder: '1' },
+      { key: 'is_active', label: 'Active', type: 'toggle' }
     ]
   };
 
   function getItemDisplayTitle(table, item) {
     if (table === 'breaking_news') return item.headline || 'Untitled';
     if (table === 'ai_tools') return item.name || 'Untitled';
+    if (table === 'market_movers') return (item.ticker || '') + ' — ' + (item.company_name || 'Untitled');
+    if (table === 'upcoming_ipos') return item.company_name || 'Untitled';
     return item.title || item.name || item.headline || 'Untitled';
   }
 
@@ -2445,6 +2582,8 @@
     if (table === 'training_courses') return item.is_free ? 'Free' : 'Paid';
     if (table === 'ai_tools') return item.status === 'live' ? 'Live' : 'Coming Soon';
     if (table === 'breaking_news') return item.is_active ? 'Active' : 'Inactive';
+    if (table === 'market_movers') return (item.category || '') + ' — $' + (item.price || '');
+    if (table === 'upcoming_ipos') return (item.category || '') + ' — ' + (item.status || '');
     return item.badge || '';
   }
 
@@ -2627,6 +2766,8 @@
     else if (table === 'industry_impact') renderIndustryImpact();
     else if (table === 'ai_tools') renderAITools();
     else if (table === 'breaking_news') renderBreakingNews();
+    else if (table === 'market_movers') renderMarketMovers();
+    else if (table === 'upcoming_ipos') renderUpcomingIPOs();
   }
 
   // ========================================
@@ -2659,7 +2800,9 @@
             'content-training': 'training_courses',
             'content-industry': 'industry_impact',
             'content-tools': 'ai_tools',
-            'content-ticker': 'breaking_news'
+            'content-ticker': 'breaking_news',
+            'content-movers': 'market_movers',
+            'content-ipos': 'upcoming_ipos'
           }[target];
           if (tableKey) showContentList(tableKey);
         }
@@ -2700,6 +2843,9 @@
     renderSemiNews();
     renderTrainingCourses();
     renderIndustryImpact();
+    renderMarketMovers();
+    renderUpcomingIPOs();
+    initTradingViewChart();
     renderAITools();
   }
 
