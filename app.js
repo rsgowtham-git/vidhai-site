@@ -1415,154 +1415,245 @@
   }
 
   // ========================================
-  // NEWSLETTER COMPOSE & SEND
+  // NEWSLETTER COMPOSE & SEND (Multi-Section)
   // ========================================
 
-  var nlStories = [];
+  var nlSections = { ai: [], semi: [], blog: [], video: [] };
+  var nlSectionLimits = { ai: 4, semi: 3, blog: 2, video: 3 };
+  var nlSectionLabels = { ai: 'AI News', semi: 'Semiconductor', blog: 'Blog', video: 'Video' };
 
-  function renderNLStories() {
-    var listEl = document.getElementById('nl-stories-list');
+  function renderNLSection(section) {
+    var listEl = document.getElementById('nl-' + section + '-stories-list') || document.getElementById('nl-' + section + '-list');
     if (!listEl) return;
+    var items = nlSections[section] || [];
 
-    listEl.innerHTML = nlStories.map(function(story, i) {
-      return '<div class="nl-story-item">' +
-        '<button type="button" class="nl-story-remove" data-remove-index="' + i + '">&times;</button>' +
-        '<div class="admin-field">' +
-          '<label>Headline #' + (i + 1) + '</label>' +
-          '<input type="text" class="admin-input nl-story-title" data-index="' + i + '" value="' + escapeHTML(story.title) + '" placeholder="Story headline">' +
-        '</div>' +
-        '<div class="admin-field">' +
-          '<label>Summary (bullet points, one per line)</label>' +
-          '<textarea class="admin-textarea nl-story-summary" data-index="' + i + '" rows="3" placeholder="Key point 1&#10;Key point 2">' + escapeHTML(story.summary) + '</textarea>' +
-        '</div>' +
-        '<div class="admin-field">' +
-          '<label>Source URL</label>' +
-          '<input type="text" class="admin-input nl-story-url" data-index="' + i + '" value="' + escapeHTML(story.url) + '" placeholder="https://...">' +
-        '</div>' +
-        '<div class="admin-field">' +
-          '<label>Source Name</label>' +
-          '<input type="text" class="admin-input nl-story-source" data-index="' + i + '" value="' + escapeHTML(story.source) + '" placeholder="e.g. Reuters, Bloomberg">' +
-        '</div>' +
-      '</div>';
-    }).join('');
+    if (section === 'video') {
+      listEl.innerHTML = items.map(function(item, i) {
+        return '<div class="nl-story-item">' +
+          '<button type="button" class="nl-story-remove" data-section="' + section + '" data-remove-index="' + i + '">&times;</button>' +
+          '<div class="admin-field"><label>Video Title</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="title" value="' + escapeHTML(item.title) + '" placeholder="Video title"></div>' +
+          '<div class="admin-field"><label>Channel / Source</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="source" value="' + escapeHTML(item.source) + '" placeholder="e.g. Fireship"></div>' +
+          '<div class="admin-field"><label>URL</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="url" value="' + escapeHTML(item.url) + '" placeholder="https://..."></div>' +
+          '<div class="admin-field"><label>Duration</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="duration" value="' + escapeHTML(item.duration || '') + '" placeholder="e.g. 14 min"></div>' +
+        '</div>';
+      }).join('');
+    } else if (section === 'blog') {
+      listEl.innerHTML = items.map(function(item, i) {
+        return '<div class="nl-story-item">' +
+          '<button type="button" class="nl-story-remove" data-section="' + section + '" data-remove-index="' + i + '">&times;</button>' +
+          '<div class="admin-field"><label>Post Title</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="title" value="' + escapeHTML(item.title) + '" placeholder="Blog post title"></div>' +
+          '<div class="admin-field"><label>Excerpt</label>' +
+          '<textarea class="admin-textarea nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="summary" rows="2" placeholder="Short excerpt or teaser...">' + escapeHTML(item.summary) + '</textarea></div>' +
+          '<div class="admin-field"><label>URL</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="url" value="' + escapeHTML(item.url) + '" placeholder="https://vidhai.co/blog.html#..."></div>' +
+        '</div>';
+      }).join('');
+    } else {
+      listEl.innerHTML = items.map(function(item, i) {
+        return '<div class="nl-story-item">' +
+          '<button type="button" class="nl-story-remove" data-section="' + section + '" data-remove-index="' + i + '">&times;</button>' +
+          '<div class="admin-field"><label>Badge / Category</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="badge" value="' + escapeHTML(item.badge || '') + '" placeholder="e.g. AI Models, Funding, Fabrication"></div>' +
+          '<div class="admin-field"><label>Headline</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="title" value="' + escapeHTML(item.title) + '" placeholder="Story headline"></div>' +
+          '<div class="admin-field"><label>Summary</label>' +
+          '<textarea class="admin-textarea nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="summary" rows="2" placeholder="Brief summary...">' + escapeHTML(item.summary) + '</textarea></div>' +
+          '<div class="admin-field"><label>Source Name</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="source" value="' + escapeHTML(item.source) + '" placeholder="e.g. Reuters, TechCrunch"></div>' +
+          '<div class="admin-field"><label>Source URL</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="url" value="' + escapeHTML(item.url) + '" placeholder="https://..."></div>' +
+          '<div class="admin-field"><label>Date</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="date" value="' + escapeHTML(item.date || '') + '" placeholder="e.g. Mar 5, 2026"></div>' +
+        '</div>';
+      }).join('');
+    }
 
     // Bind remove buttons
     listEl.querySelectorAll('[data-remove-index]').forEach(function(btn) {
       btn.addEventListener('click', function() {
-        syncNLStories();
-        nlStories.splice(parseInt(btn.getAttribute('data-remove-index'), 10), 1);
-        renderNLStories();
+        syncNLAllFields();
+        var sec = btn.getAttribute('data-section');
+        nlSections[sec].splice(parseInt(btn.getAttribute('data-remove-index'), 10), 1);
+        renderNLSection(sec);
       });
     });
   }
 
-  function syncNLStories() {
-    document.querySelectorAll('.nl-story-title').forEach(function(inp) {
-      var idx = parseInt(inp.getAttribute('data-index'), 10);
-      if (nlStories[idx]) nlStories[idx].title = inp.value;
-    });
-    document.querySelectorAll('.nl-story-summary').forEach(function(ta) {
-      var idx = parseInt(ta.getAttribute('data-index'), 10);
-      if (nlStories[idx]) nlStories[idx].summary = ta.value;
-    });
-    document.querySelectorAll('.nl-story-url').forEach(function(inp) {
-      var idx = parseInt(inp.getAttribute('data-index'), 10);
-      if (nlStories[idx]) nlStories[idx].url = inp.value;
-    });
-    document.querySelectorAll('.nl-story-source').forEach(function(inp) {
-      var idx = parseInt(inp.getAttribute('data-index'), 10);
-      if (nlStories[idx]) nlStories[idx].source = inp.value;
+  function syncNLAllFields() {
+    document.querySelectorAll('.nl-item-field').forEach(function(el) {
+      var sec = el.getAttribute('data-section');
+      var idx = parseInt(el.getAttribute('data-index'), 10);
+      var field = el.getAttribute('data-field');
+      if (nlSections[sec] && nlSections[sec][idx]) {
+        nlSections[sec][idx][field] = el.tagName === 'TEXTAREA' ? el.value : el.value;
+      }
     });
   }
 
-  var nlAddStoryBtn = document.getElementById('nl-add-story');
-  if (nlAddStoryBtn) {
-    nlAddStoryBtn.addEventListener('click', function() {
-      if (nlStories.length >= 6) {
-        alert('Maximum 6 stories per newsletter.');
+  // Add story buttons (multiple sections)
+  document.querySelectorAll('.nl-add-story-btn').forEach(function(btn) {
+    btn.addEventListener('click', function() {
+      var section = btn.getAttribute('data-section');
+      var limit = nlSectionLimits[section] || 4;
+      syncNLAllFields();
+      if (nlSections[section].length >= limit) {
+        alert('Maximum ' + limit + ' items in this section.');
         return;
       }
-      syncNLStories();
-      nlStories.push({ title: '', summary: '', url: '', source: '' });
-      renderNLStories();
+      if (section === 'video') {
+        nlSections[section].push({ title: '', source: '', url: '', duration: '' });
+      } else if (section === 'blog') {
+        nlSections[section].push({ title: '', summary: '', url: '' });
+      } else {
+        nlSections[section].push({ badge: '', title: '', summary: '', source: '', url: '', date: '' });
+      }
+      renderNLSection(section);
     });
-  }
+  });
 
-  // Build newsletter HTML
+  // Build the beautiful newsletter HTML
   function buildNewsletterHTML() {
-    syncNLStories();
-    var subject = (document.getElementById('nl-subject') || {}).value || 'Vidhai Newsletter';
-    var quickReadsText = (document.getElementById('nl-quick-reads') || {}).value || '';
+    syncNLAllFields();
+    var subject = (document.getElementById('nl-subject') || {}).value || 'Vidhai Weekly Digest';
+    var personalNote = (document.getElementById('nl-personal-note') || {}).value || '';
 
     var today = new Date();
     var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
     var dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
 
-    // Build stories HTML
-    var storiesHTML = '';
-    nlStories.forEach(function(story, i) {
-      if (!story.title) return;
-      var bullets = story.summary.split('\n').filter(function(l) { return l.trim(); }).map(function(line) {
-        return '<li style="margin:0;padding:4px 0;font-size:14px;color:#334155;line-height:1.7;">' + escapeHTML(line.trim()) + '</li>';
-      }).join('');
-
-      storiesHTML +=
-        '<div style="margin-bottom:32px;">' +
-          '<h2 style="font-size:18px;color:#0f172a;margin:0 0 8px 0;font-weight:600;">' +
-            (i + 1) + '. ' + (story.url ? '<a href="' + escapeHTML(story.url) + '" style="color:#0f172a;text-decoration:none;">' + escapeHTML(story.title) + '</a>' : escapeHTML(story.title)) +
-          '</h2>' +
-          (story.source ? '<p style="font-size:12px;color:#94a3b8;margin:0 0 8px 0;font-style:italic;">' + (story.url ? '<a href="' + escapeHTML(story.url) + '" style="color:#94a3b8;text-decoration:underline;">' + escapeHTML(story.source) + '</a>' : escapeHTML(story.source)) + '</p>' : '') +
-          (bullets ? '<ul style="margin:0;padding-left:20px;">' + bullets + '</ul>' : '') +
-        '</div>';
-    });
-
-    // Build quick reads HTML
-    var quickReadsHTML = '';
-    var quickLines = quickReadsText.split('\n').filter(function(l) { return l.trim(); });
-    if (quickLines.length > 0) {
-      var qItems = quickLines.map(function(line) {
-        var parts = line.split(' \u2014 ');
-        if (parts.length < 2) parts = line.split(' - ');
-        var title = parts[0] ? parts[0].trim() : line.trim();
-        var url = parts[1] ? parts[1].trim() : '';
-        if (url) {
-          return '<li style="margin:4px 0;font-size:14px;line-height:1.6;"><a href="' + escapeHTML(url) + '" style="color:#0ea5e9;text-decoration:none;font-weight:500;">' + escapeHTML(title) + '</a></li>';
-        }
-        return '<li style="margin:4px 0;font-size:14px;line-height:1.6;color:#334155;">' + escapeHTML(title) + '</li>';
-      }).join('');
-
-      quickReadsHTML =
-        '<div style="margin-top:16px;padding-top:24px;border-top:1px solid #e2e8f0;">' +
-          '<h3 style="font-size:16px;color:#0f172a;margin:0 0 12px 0;font-weight:600;">Quick Reads</h3>' +
-          '<ul style="margin:0;padding-left:20px;">' + qItems + '</ul>' +
-        '</div>';
-    }
-
     var unsubUrl = '{{UNSUBSCRIBE_URL}}';
 
-    return '<!DOCTYPE html><html><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
-      '<body style="margin:0;padding:0;background:#f8f9ff;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;">' +
-      '<div style="max-width:560px;margin:0 auto;padding:40px 20px;">' +
-        '<div style="background:#ffffff;border-radius:12px;padding:40px 32px;border:1px solid #e2e8f0;">' +
-          '<div style="text-align:center;margin-bottom:32px;">' +
-            '<h1 style="font-size:22px;color:#0f172a;margin:0 0 4px 0;">Vidhai</h1>' +
-            '<p style="color:#64748b;font-size:13px;margin:0 0 4px 0;">AI Takes Root</p>' +
-            '<p style="color:#94a3b8;font-size:12px;margin:0;">' + dateStr + '</p>' +
-          '</div>' +
-          storiesHTML +
-          quickReadsHTML +
-          '<div style="margin-top:32px;padding-top:24px;border-top:1px solid #e2e8f0;text-align:center;">' +
-            '<p style="color:#334155;font-size:14px;line-height:1.7;margin:0 0 16px 0;">Thanks for reading. Visit <a href="https://vidhai.co" style="color:#0ea5e9;text-decoration:none;font-weight:500;">vidhai.co</a> for more.</p>' +
-          '</div>' +
+    // Badge color mapping
+    function badgeStyle(badge) {
+      var b = (badge || '').toLowerCase();
+      if (b.indexOf('model') >= 0 || b.indexOf('release') >= 0) return 'background:#dbeafe;color:#1e40af;';
+      if (b.indexOf('policy') >= 0 || b.indexOf('regulation') >= 0) return 'background:#dbeafe;color:#1e40af;';
+      if (b.indexOf('agent') >= 0) return 'background:#dbeafe;color:#1e40af;';
+      if (b.indexOf('fund') >= 0) return 'background:#dbeafe;color:#1e40af;';
+      if (b.indexOf('fab') >= 0 || b.indexOf('chip') >= 0 || b.indexOf('semi') >= 0) return 'background:#fce7f3;color:#9d174d;';
+      if (b.indexOf('memory') >= 0 || b.indexOf('hbm') >= 0) return 'background:#fce7f3;color:#9d174d;';
+      if (b.indexOf('talent') >= 0 || b.indexOf('hire') >= 0) return 'background:#fce7f3;color:#9d174d;';
+      return 'background:#f1f5f9;color:#475569;';
+    }
+
+    // --- Build sections ---
+    // Personal note
+    var personalNoteHTML = '';
+    if (personalNote.trim()) {
+      personalNoteHTML = '<div style="padding:28px 40px;border-bottom:1px solid #e4e4e7;">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:16px;">FROM GOWTHAM</div>' +
+        '<div style="background:#f8fafc;border-left:3px solid #2dd4bf;padding:16px 20px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.6;color:#334155;">' +
+        escapeHTML(personalNote).replace(/\n/g, '<br>') +
+        '</div></div>';
+    }
+
+    // AI news
+    var aiHTML = '';
+    var aiStories = (nlSections.ai || []).filter(function(s) { return s.title; });
+    if (aiStories.length > 0) {
+      var aiItems = aiStories.map(function(s) {
+        var badge = s.badge ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:6px;' + badgeStyle(s.badge) + '">' + escapeHTML(s.badge) + '</span><br>' : '';
+        var titleLink = s.url ? '<a href="' + escapeHTML(s.url) + '" style="color:#18181b;text-decoration:none;">' + escapeHTML(s.title) + '</a>' : escapeHTML(s.title);
+        var src = (s.source || s.date) ? '<div style="font-size:11px;color:#a1a1aa;margin-top:4px;">' + escapeHTML(s.source || '') + (s.source && s.date ? ' &bull; ' : '') + escapeHTML(s.date || '') + '</div>' : '';
+        return '<div style="margin-bottom:20px;">' + badge +
+          '<div style="font-size:15px;font-weight:600;color:#18181b;margin-bottom:4px;">' + titleLink + '</div>' +
+          '<div style="font-size:13px;line-height:1.5;color:#52525b;margin:0;">' + escapeHTML(s.summary || '') + '</div>' +
+          src + '</div>';
+      }).join('');
+      aiHTML = '<div style="padding:28px 40px;border-bottom:1px solid #e4e4e7;">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:16px;">AI NEWS THIS WEEK</div>' +
+        aiItems + '</div>';
+    }
+
+    // Semiconductor insights
+    var semiHTML = '';
+    var semiStories = (nlSections.semi || []).filter(function(s) { return s.title; });
+    if (semiStories.length > 0) {
+      var semiItems = semiStories.map(function(s) {
+        var badge = s.badge ? '<span style="display:inline-block;font-size:10px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:2px 8px;border-radius:4px;margin-bottom:6px;background:#fce7f3;color:#9d174d;">' + escapeHTML(s.badge) + '</span><br>' : '';
+        var titleLink = s.url ? '<a href="' + escapeHTML(s.url) + '" style="color:#18181b;text-decoration:none;">' + escapeHTML(s.title) + '</a>' : escapeHTML(s.title);
+        var src = (s.source || s.date) ? '<div style="font-size:11px;color:#a1a1aa;margin-top:4px;">' + escapeHTML(s.source || '') + (s.source && s.date ? ' &bull; ' : '') + escapeHTML(s.date || '') + '</div>' : '';
+        return '<div style="margin-bottom:20px;">' + badge +
+          '<div style="font-size:15px;font-weight:600;color:#18181b;margin-bottom:4px;">' + titleLink + '</div>' +
+          '<div style="font-size:13px;line-height:1.5;color:#52525b;margin:0;">' + escapeHTML(s.summary || '') + '</div>' +
+          src + '</div>';
+      }).join('');
+      semiHTML = '<div style="padding:28px 40px;border-bottom:1px solid #e4e4e7;">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:16px;">SEMICONDUCTOR INSIGHTS</div>' +
+        semiItems + '</div>';
+    }
+
+    // Blog highlight
+    var blogHTML = '';
+    var blogPosts = (nlSections.blog || []).filter(function(s) { return s.title; });
+    if (blogPosts.length > 0) {
+      var blogItems = blogPosts.map(function(s) {
+        var titleLink = s.url ? '<a href="' + escapeHTML(s.url) + '" style="color:#0f172a;text-decoration:none;">' + escapeHTML(s.title) + '</a>' : escapeHTML(s.title);
+        return '<div style="background:#f0fdfa;border:1px solid #ccfbf1;border-radius:8px;padding:20px;margin-bottom:16px;">' +
+          '<div style="font-size:16px;font-weight:600;color:#0f172a;margin-bottom:6px;">' + titleLink + '</div>' +
+          '<div style="font-size:13px;line-height:1.5;color:#475569;margin:0;">' + escapeHTML(s.summary || '') + '</div>' +
+          (s.url ? '<a href="' + escapeHTML(s.url) + '" style="display:inline-block;margin-top:10px;font-size:13px;font-weight:600;color:#0d9488;text-decoration:none;">Read the full post &rarr;</a>' : '') +
+        '</div>';
+      }).join('');
+      blogHTML = '<div style="padding:28px 40px;border-bottom:1px solid #e4e4e7;">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:16px;">FROM THE BLOG</div>' +
+        blogItems + '</div>';
+    }
+
+    // Videos
+    var videoHTML = '';
+    var videos = (nlSections.video || []).filter(function(s) { return s.title; });
+    if (videos.length > 0) {
+      var videoItems = videos.map(function(s) {
+        var titleLink = s.url ? '<a href="' + escapeHTML(s.url) + '" style="color:#18181b;text-decoration:none;">' + escapeHTML(s.title) + '</a>' : escapeHTML(s.title);
+        return '<div style="margin-bottom:16px;">' +
+          '<div style="font-size:14px;font-weight:600;color:#18181b;margin-bottom:2px;">' + titleLink + '</div>' +
+          '<div style="font-size:12px;color:#71717a;">' + escapeHTML(s.source || '') + (s.duration ? ' &bull; ' + escapeHTML(s.duration) : '') + '</div>' +
+        '</div>';
+      }).join('');
+      videoHTML = '<div style="padding:28px 40px;border-bottom:1px solid #e4e4e7;">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:16px;">WORTH WATCHING</div>' +
+        videoItems + '</div>';
+    }
+
+    // Assemble full email
+    return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
+      '<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#18181b;-webkit-text-size-adjust:100%;">' +
+      '<div style="width:100%;background:#f4f4f5;padding:32px 0;">' +
+      '<div style="max-width:600px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">' +
+        // Header
+        '<div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);padding:32px 40px;text-align:center;">' +
+          '<div style="font-size:28px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Vidhai<span style="color:#2dd4bf;">.</span></div>' +
+          '<div style="font-size:13px;color:#94a3b8;margin-top:4px;letter-spacing:1px;text-transform:uppercase;">AI Takes Root</div>' +
+          '<div style="font-size:14px;color:#cbd5e1;margin-top:12px;">Weekly Digest &mdash; ' + dateStr + '</div>' +
         '</div>' +
-        '<div style="text-align:center;margin-top:24px;">' +
-          '<p style="color:#94a3b8;font-size:11px;margin:0;">' +
-            '<a href="' + unsubUrl + '" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> &middot; ' +
-            '<a href="https://vidhai.co" style="color:#94a3b8;text-decoration:underline;">vidhai.co</a>' +
+        personalNoteHTML +
+        aiHTML +
+        semiHTML +
+        blogHTML +
+        videoHTML +
+        // CTA
+        '<div style="text-align:center;padding:28px 40px;background:#f8fafc;">' +
+          '<a href="https://vidhai.co" style="display:inline-block;background:#0d9488;color:#ffffff;font-size:14px;font-weight:600;padding:12px 32px;border-radius:8px;text-decoration:none;">Visit Vidhai for More &rarr;</a>' +
+        '</div>' +
+        // Footer
+        '<div style="padding:24px 40px;text-align:center;background:#fafafa;border-top:1px solid #e4e4e7;">' +
+          '<div style="margin-bottom:12px;">' +
+            '<a href="https://www.linkedin.com/in/gowthamanrajusujatha/" style="display:inline-block;margin:0 8px;font-size:12px;color:#71717a;text-decoration:none;">Gowtham on LinkedIn</a> &bull; ' +
+            '<a href="https://linkedin.com/company/vidh-ai" style="display:inline-block;margin:0 8px;font-size:12px;color:#71717a;text-decoration:none;">Vidhai Company Page</a>' +
+          '</div>' +
+          '<p style="font-size:12px;color:#a1a1aa;line-height:1.6;margin:0;">' +
+            'You received this because you subscribed at <a href="https://vidhai.co" style="color:#71717a;">vidhai.co</a>.<br>' +
+            '<a href="' + unsubUrl + '" style="color:#71717a;text-decoration:underline;">Unsubscribe</a>' +
           '</p>' +
+          '<p style="font-size:12px;color:#a1a1aa;margin:8px 0 0 0;">&copy; 2026 Vidhai. All rights reserved.</p>' +
         '</div>' +
-      '</div>' +
-      '</body></html>';
+      '</div></div></body></html>';
   }
 
   // Preview button
@@ -1573,7 +1664,7 @@
       var previewContainer = document.getElementById('nl-preview-container');
       var previewFrame = document.getElementById('nl-preview-frame');
       if (previewContainer && previewFrame) {
-        previewFrame.innerHTML = '<iframe srcdoc="' + html.replace(/"/g, '&quot;') + '"></iframe>';
+        previewFrame.innerHTML = '<iframe srcdoc="' + html.replace(/"/g, '&quot;') + '" style="width:100%;min-height:800px;border:none;"></iframe>';
         previewContainer.style.display = 'block';
       }
     });
@@ -1597,10 +1688,12 @@
         return;
       }
 
-      syncNLStories();
-      var hasContent = nlStories.some(function(s) { return s.title; }) || (document.getElementById('nl-quick-reads') || {}).value.trim();
+      syncNLAllFields();
+      var hasContent = ['ai','semi','blog','video'].some(function(sec) {
+        return nlSections[sec].some(function(s) { return s.title; });
+      });
       if (!hasContent) {
-        alert('Add at least one story or quick read.');
+        alert('Add at least one story to the newsletter.');
         return;
       }
 
@@ -1633,7 +1726,7 @@
           statusEl.style.color = data.success ? '#22c55e' : '#f87171';
         }
       })
-      .catch(function(err) {
+      .catch(function() {
         nlSendBtn.disabled = false;
         nlSendBtn.textContent = 'Send Newsletter';
         if (statusEl) {

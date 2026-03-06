@@ -987,7 +987,43 @@
       <div class="newsletter-compose">
         <div class="admin-field">
           <label for="nl-subject">Subject Line</label>
-          <input type="text" id="nl-subject" class="admin-input" placeholder="e.g. Vidhai Weekly — March 5, 2026">
+          <input type="text" id="nl-subject" class="admin-input" placeholder="e.g. Vidhai Weekly Digest — March 7, 2026">
+        </div>
+        <div class="admin-field">
+          <label for="nl-personal-note">Personal Note (from Gowtham)</label>
+          <textarea id="nl-personal-note" class="admin-textarea" rows="4" placeholder="Happy Friday! Write a brief personal note about this week's highlights..."></textarea>
+        </div>
+        <div class="admin-field">
+          <label>AI News (add up to 4)</label>
+          <div id="nl-ai-stories-list" class="nl-stories-list"></div>
+          <button type="button" class="admin-btn admin-btn--sm nl-add-story-btn" data-section="ai">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add AI Story
+          </button>
+        </div>
+        <div class="admin-field">
+          <label>Semiconductor Insights (add up to 3)</label>
+          <div id="nl-semi-stories-list" class="nl-stories-list"></div>
+          <button type="button" class="admin-btn admin-btn--sm nl-add-story-btn" data-section="semi">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Semiconductor Story
+          </button>
+        </div>
+        <div class="admin-field">
+          <label>Blog Highlight (optional)</label>
+          <div id="nl-blog-list" class="nl-stories-list"></div>
+          <button type="button" class="admin-btn admin-btn--sm nl-add-story-btn" data-section="blog">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Blog Post
+          </button>
+        </div>
+        <div class="admin-field">
+          <label>Curated Videos (up to 3)</label>
+          <div id="nl-videos-list" class="nl-stories-list"></div>
+          <button type="button" class="admin-btn admin-btn--sm nl-add-story-btn" data-section="video">
+            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
+            Add Video
+          </button>
         </div>
         <div class="admin-field">
           <label for="nl-audience">Send to</label>
@@ -997,20 +1033,11 @@
             <option value="monthly">Monthly subscribers only</option>
           </select>
         </div>
-        <div class="admin-field">
-          <label>Stories (add up to 6)</label>
-          <div id="nl-stories-list" class="nl-stories-list"></div>
-          <button type="button" class="admin-btn admin-btn--sm" id="nl-add-story">
-            <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
-            Add Story
-          </button>
-        </div>
-        <div class="admin-field">
-          <label for="nl-quick-reads">Quick Reads (one per line: Title — URL)</label>
-          <textarea id="nl-quick-reads" class="admin-textarea" rows="5" placeholder="GPT-5 launches with 2M context — https://example.com/article&#10;NVIDIA unveils new chip — https://example.com/nvidia"></textarea>
-        </div>
         <div class="nl-compose-actions">
-          <button type="button" class="admin-btn" id="nl-preview-btn">Preview</button>
+          <button type="button" class="admin-btn" id="nl-preview-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
+            Preview
+          </button>
           <button type="button" class="admin-btn admin-btn--primary" id="nl-send-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
             Send Newsletter
