@@ -2291,6 +2291,9 @@
 
       if (featuredContainer) {
         featuredContainer.innerHTML = liveTools.map(buildFeaturedToolHTML).join('');
+        // Re-register dynamically added .reveal elements for scroll reveal
+        reveals = document.querySelectorAll('.reveal, .stagger');
+        checkReveal();
       }
 
       if (upcomingContainer) {
