@@ -1,7 +1,7 @@
 // ============================================
 // VIDHAI — Newsletter Draft Generator API
 // Generates newsletter content from recent posts
-// UPDATED: Now includes news, highlights, market data, IPOs, and AI tools reminder
+// UPDATED: Now loads newsletter-data.json from GitHub
 // ============================================
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
@@ -308,15 +308,17 @@ module.exports = async function handler(req, res) {
       });
     }
 
-    // Load curated sections from newsletter-data.json
+    // ⭐ LOAD NEWSLETTER DATA FROM GITHUB (this was missing!)
     let newsletterData = null;
     try {
-      const ndRes = await fetch('https://raw.githubusercontent.com/rsgowtham-git/vidhai-site/main/newsletter-data.json');
+      const ndUrl = 'https://raw.githubusercontent.com/rsgowtham-git/vidhai-site/main/newsletter-data.json';
+      const ndRes = await fetch(ndUrl);
       if (ndRes.ok) {
         newsletterData = await ndRes.json();
+        console.log('✅ Loaded newsletter-data.json successfully');
       }
     } catch (e) {
-      console.error('Failed to load newsletter-data.json', e);
+      console.error('❌ Failed to load newsletter-data.json:', e);
     }
 
     // Get subscriber count for metadata
@@ -326,7 +328,7 @@ module.exports = async function handler(req, res) {
     // Determine frequency (can be passed as query param, default to weekly)
     const frequency = req.query.frequency || 'weekly';
 
-    // Generate newsletter HTML
+    // ⭐ Generate newsletter HTML WITH newsletterData
     const htmlContent = generateNewsletterHTML(posts, frequency, newsletterData);
 
     // Generate subject line
@@ -342,6 +344,7 @@ module.exports = async function handler(req, res) {
       postCount: posts.length,
       subscriberCount: subscriberCount,
       frequency: frequency,
+      newsletterDataLoaded: newsletterData !== null,  // ⭐ Debug flag
       posts: posts.map(p => ({
         id: p.id,
         title: p.title,
