@@ -1,0 +1,40 @@
+{
+  "topNews": [
+    {
+      "title": "AI Is Reshaping Manufacturing in 2026",
+      "summary": "Why vision systems and predictive maintenance are now table stakes on modern lines.",
+      "url": "https://vidhai.co/blog.html?post=post-3"
+    },
+    {
+      "title": "5 Free AI Courses Every Professional Should Take",
+      "summary": "A curated ladder for non-CS professionals to become AI-literate in 2026.",
+      "url": "https://vidhai.co/blog.html?post=post-2"
+    },
+    {
+      "title": "Why I Started Vidhai",
+      "summary": "The story behind Vidhai and why AI is the seed for this decade.",
+      "url": "https://vidhai.co/blog.html?post=post-1"
+    }
+  ],
+  "industryHighlights": [
+    "Semiconductor demand is increasingly driven by AI data centers, stressing supply chains.",
+    "Vision inspection and digital twins are moving from pilots to standard work in factories.",
+    "Execs are prioritizing AI literacy and internal training over pure tool rollouts."
+  ],
+  "bestPerformers": [
+    "NVDA – GPU demand from AI datacenters continues to outpace supply.",
+    "TSMC – Benefiting from advanced node demand tied to AI workloads.",
+    "ASML – EUV backlog supported by HBM and leading-edge logic ramps."
+  ],
+  "worstPerformers": [
+    "Legacy CPU-only vendors – Losing share to AI-optimized architectures.",
+    "Single-sourced fabs – Struggling with supply assurance vs. dual-sourced peers.",
+    "Pure-play memory suppliers – Margin pressure from cyclical oversupply."
+  ],
+  "upcomingIPOs": [
+    "EdgeAI Systems – Edge inference hardware for industrial automation (expected 2H 2026).",
+    "DataFabric Cloud – Data pipeline SaaS optimized for AI training workloads.",
+    "FactoryVision AI – Vertical computer-vision platform for discrete manufacturing."
+  ],
+  "aiToolsReminder": "Have you tried the AI tools on Vidhai yet? Start with MeetPilot for automatic meeting notes, action items, and follow-ups — built on the same stack that powers this newsletter."
+}
