@@ -1,5 +1,5 @@
 // /api/newsletter-draft.js
-// Generates a structured newsletter draft using real news + curated IPOs
+// Generates a newsletter subject + body using real news and curated IPOs
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -11,89 +11,123 @@ export default async function handler(req, res) {
   }
 
   try {
-    // 1) Fetch real news articles (already implemented)
-    const newsResponse = await fetch(`${process.env.VIDHAI_BASE_URL || 'https://vidhai.co'}/api/newsletter-news`);
+    const baseUrl = process.env.VIDHAI_BASE_URL || 'https://vidhai.co';
+
+    // 1) Fetch news articles
+    const newsResponse = await fetch(`${baseUrl}/api/newsletter-news`);
     let newsData = { success: false, articles: [] };
     if (newsResponse.ok) {
       newsData = await newsResponse.json();
     }
 
-    // Take up to 3 articles for Top News
-    const topNewsArticles = (newsData.articles || []).slice(0, 3).map((a, index) => ({
-      id: `news-${index + 1}`,
-      title: a.title,
-      summary: a.description,
-      url: a.url,
-      source: a.source,
-      publishedAt: a.publishedAt
-    }));
+    const articles = newsData.articles || [];
 
-    // 2) Curated IPO data (edit this array as needed)
+    const topNews = articles.slice(0, 3);
+    const insights = articles.slice(3, 6);
+
+    // 2) Curated IPOs (edit as needed)
     const upcomingIPOs = [
       {
         company: 'OpenAI',
         description: 'Leading AI research organization behind ChatGPT and GPT-4, expanding into enterprise AI platforms.',
         expected: 'Q2 2026',
-        why_it_matters: 'Sets benchmarks for foundation models used across manufacturing, design, and supply chain optimization.'
+        why: 'Sets benchmarks for foundation models used across manufacturing, design, and supply chain optimization.'
       },
       {
         company: 'SpaceX Starlink',
         description: 'Global satellite internet constellation targeting ubiquitous low-latency connectivity.',
         expected: '2H 2026',
-        why_it_matters: 'Enables resilient connectivity for remote plants, mobile assets, and distributed industrial IoT.'
+        why: 'Enables resilient connectivity for remote plants, mobile assets, and distributed industrial IoT.'
       },
       {
         company: 'SiFive',
         description: 'RISC-V chip designer focused on customizable CPU IP for AI and edge workloads.',
         expected: '2026 (watchlist)',
-        why_it_matters: 'Open instruction set architectures may reshape how specialized industrial controllers are designed.'
+        why: 'Open architectures may reshape how industrial controllers and edge devices are designed.'
       }
     ];
 
-    const ipoItems = upcomingIPOs.slice(0, 3).map((ipo, index) => ({
-      id: `ipo-${index + 1}`,
-      title: ipo.company,
-      description: ipo.description,
-      expected: ipo.expected,
-      whyItMatters: ipo.why_it_matters
-    }));
+    const ipos = upcomingIPOs.slice(0, 3);
 
-    // 3) Industry insights section based on remaining news
-    const remainingArticles = (newsData.articles || []).slice(3, 6);
-    const insights = remainingArticles.map((a, index) => ({
-      id: `insight-${index + 1}`,
-      title: a.title,
-      takeaway: a.description,
-      url: a.url,
-      source: a.source
-    }));
+    // 3) Build a human-readable subject line
+    const firstTitle = topNews[0]?.title || 'AI & Manufacturing Weekly Briefing';
+    const subject = `Vidhai Weekly — ${firstTitle}`.slice(0, 120);
 
-    // 4) Build the draft payload expected by your frontend
-    const draft = {
-      metadata: {
-        generatedAt: new Date().toISOString(),
-        newsSource: newsData.source || 'hybrid',
-        newsCount: newsData.count || 0
-      },
-      sections: {
-        topNews: {
-          title: 'Top 3 News',
-          items: topNewsArticles
-        },
-        industryInsights: {
-          title: 'Industry Insights',
-          items: insights
-        },
-        ipos: {
-          title: 'Top 3 Upcoming IPOs',
-          items: ipoItems
-        }
-      }
-    };
+    // 4) Build the body text (plain text / markdown-ish)
+    let body = '';
+
+    body += 'Top 3 News
+';
+    body += '-----------
+';
+    if (topNews.length === 0) {
+      body += '- No major stories this week.
+
+';
+    } else {
+      topNews.forEach((a, idx) => {
+        body += `${idx + 1}. ${a.title}
+`;
+        if (a.description) body += `${a.description}
+`;
+        if (a.url) body += `${a.url}
+`;
+        body += '
+';
+      });
+    }
+
+    body += '
+Industry Insights
+';
+    body += '-----------------
+';
+    if (insights.length === 0) {
+      body += '- No additional deep dives this week.
+
+';
+    } else {
+      insights.forEach((a, idx) => {
+        body += `${idx + 1}. ${a.title}
+`;
+        if (a.description) body += `${a.description}
+`;
+        if (a.url) body += `${a.url}
+`;
+        body += '
+';
+      });
+    }
+
+    body += '
+Top 3 Upcoming IPOs
+';
+    body += '-------------------
+';
+    if (ipos.length === 0) {
+      body += '- No IPOs on our watchlist this week.
+
+';
+    } else {
+      ipos.forEach((ipo, idx) => {
+        body += `${idx + 1}. ${ipo.company} — ${ipo.description}
+`;
+        body += `   Expected: ${ipo.expected}
+`;
+        body += `   Why it matters: ${ipo.why}
+
+`;
+      });
+    }
+
+    // Trim trailing whitespace
+    body = body.trim() + '
+';
 
     return res.status(200).json({
       success: true,
-      draft
+      subject,
+      body
     });
 
   } catch (error) {
