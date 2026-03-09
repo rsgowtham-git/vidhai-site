@@ -1,0 +1,19 @@
+{
+  "upcoming_ipos": [
+    {
+      "company": "OpenAI",
+      "description": "Leading AI research company behind ChatGPT and GPT-4",
+      "industry": "Artificial Intelligence",
+      "expected": "Q2 2026",
+      "relevance": "Major player in enterprise AI adoption"
+    },
+    {
+      "company": "SpaceX Starlink",
+      "description": "Global satellite internet service provider",
+      "industry": "Telecommunications",
+      "expected": "2H 2026",
+      "relevance": "Infrastructure for industrial IoT and remote manufacturing"
+    }
+  ],
+  "instructions": "Edit this file manually to add/remove IPOs. Only companies listed here will appear in newsletters."
+}
