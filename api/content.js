@@ -5,7 +5,7 @@
 // PUT /api/content — update an item { table, id, ...fields }
 // DELETE /api/content?table=xxx&id=xxx — delete an item
 
-const ALLOWED_TABLES = ['ai_news', 'semiconductor_news', 'training_courses', 'industry_impact', 'ai_tools', 'breaking_news', 'market_movers', 'upcoming_ipos'];
+const ALLOWED_TABLES = ['ai_news', 'semiconductor_news', 'training_courses', 'industry_impact', 'ai_tools', 'breaking_news', 'market_movers', 'upcoming_ipos', 'curated_videos'];
 
 export default async function handler(req, res) {
   res.setHeader('Access-Control-Allow-Origin', '*');
