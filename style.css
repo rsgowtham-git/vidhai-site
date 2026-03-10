@@ -3158,8 +3158,18 @@ a:hover {
 
 .nl-compose-actions {
   display: flex;
+  flex-wrap: wrap;
   gap: var(--space-2);
   margin-top: var(--space-2);
+}
+
+.admin-btn--autofill {
+  background: var(--color-surface-2);
+  border: 1px dashed var(--color-accent, #0d9488);
+  color: var(--color-accent, #0d9488);
+}
+.admin-btn--autofill:hover {
+  background: rgba(13, 148, 136, 0.1);
 }
 
 .nl-compose-status {

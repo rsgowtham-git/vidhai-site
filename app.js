@@ -1399,16 +1399,32 @@
   // NEWSLETTER COMPOSE & SEND (Multi-Section)
   // ========================================
 
-  var nlSections = { ai: [], semi: [], blog: [], video: [] };
-  var nlSectionLimits = { ai: 4, semi: 3, blog: 2, video: 3 };
-  var nlSectionLabels = { ai: 'AI News', semi: 'Semiconductor', blog: 'Blog', video: 'Video' };
+  var nlSections = { ai: [], semi: [], blog: [], video: [], invest: [] };
+  var nlSectionLimits = { ai: 4, semi: 3, blog: 2, video: 3, invest: 3 };
+  var nlSectionLabels = { ai: 'AI News', semi: 'Semiconductor', blog: 'Blog', video: 'Video', invest: 'Market Movers' };
 
   function renderNLSection(section) {
     var listEl = document.getElementById('nl-' + section + '-stories-list') || document.getElementById('nl-' + section + '-list');
     if (!listEl) return;
     var items = nlSections[section] || [];
 
-    if (section === 'video') {
+    if (section === 'invest') {
+      listEl.innerHTML = items.map(function(item, i) {
+        return '<div class="nl-story-item">' +
+          '<button type="button" class="nl-story-remove" data-section="' + section + '" data-remove-index="' + i + '">&times;</button>' +
+          '<div class="admin-field"><label>Ticker</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="ticker" value="' + escapeHTML(item.ticker || '') + '" placeholder="e.g. NVDA"></div>' +
+          '<div class="admin-field"><label>Company</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="title" value="' + escapeHTML(item.title) + '" placeholder="e.g. NVIDIA Corp"></div>' +
+          '<div class="admin-field"><label>Price</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="price" value="' + escapeHTML(item.price || '') + '" placeholder="e.g. $142.50"></div>' +
+          '<div class="admin-field"><label>Change %</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="change" value="' + escapeHTML(item.change || '') + '" placeholder="e.g. +5.2%"></div>' +
+          '<div class="admin-field"><label>Context (optional)</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="context" value="' + escapeHTML(item.context || '') + '" placeholder="e.g. AI chip demand surges"></div>' +
+        '</div>';
+      }).join('');
+    } else if (section === 'video') {
       listEl.innerHTML = items.map(function(item, i) {
         return '<div class="nl-story-item">' +
           '<button type="button" class="nl-story-remove" data-section="' + section + '" data-remove-index="' + i + '">&times;</button>' +
@@ -1486,7 +1502,9 @@
         alert('Maximum ' + limit + ' items in this section.');
         return;
       }
-      if (section === 'video') {
+      if (section === 'invest') {
+        nlSections[section].push({ ticker: '', title: '', price: '', change: '', context: '' });
+      } else if (section === 'video') {
         nlSections[section].push({ title: '', source: '', url: '', duration: '' });
       } else if (section === 'blog') {
         nlSections[section].push({ title: '', summary: '', url: '' });
@@ -1602,6 +1620,37 @@
         videoItems + '</div>';
     }
 
+    // Investments / Market Movers
+    var investHTML = '';
+    var investItems = (nlSections.invest || []).filter(function(s) { return s.title || s.ticker; });
+    if (investItems.length > 0) {
+      var moversRows = investItems.map(function(s) {
+        var changeVal = (s.change || '').trim();
+        var isDown = changeVal.indexOf('-') === 0;
+        var changeColor = isDown ? '#ef4444' : '#22c55e';
+        var arrow = isDown ? '&#9660;' : '&#9650;';
+        return '<tr>' +
+          '<td style="padding:10px 12px;font-size:14px;font-weight:700;color:#0d9488;border-bottom:1px solid #f1f5f9;">' + escapeHTML(s.ticker || '') + '</td>' +
+          '<td style="padding:10px 12px;font-size:13px;color:#334155;border-bottom:1px solid #f1f5f9;">' + escapeHTML(s.title || '') + '</td>' +
+          '<td style="padding:10px 12px;font-size:14px;font-weight:600;color:#18181b;text-align:right;border-bottom:1px solid #f1f5f9;">' + escapeHTML(s.price || '') + '</td>' +
+          '<td style="padding:10px 12px;font-size:13px;font-weight:600;color:' + changeColor + ';text-align:right;border-bottom:1px solid #f1f5f9;">' + arrow + ' ' + escapeHTML(changeVal) + '</td>' +
+        '</tr>';
+      }).join('');
+      var contextNote = investItems.filter(function(s) { return s.context; }).map(function(s) {
+        return '<div style="font-size:12px;color:#64748b;margin-top:4px;"><strong>' + escapeHTML(s.ticker || '') + ':</strong> ' + escapeHTML(s.context) + '</div>';
+      }).join('');
+      investHTML = '<div style="padding:28px 40px;border-bottom:1px solid #e4e4e7;">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:16px;">MARKET MOVERS</div>' +
+        '<table style="width:100%;border-collapse:collapse;">' +
+        '<tr style="background:#f8fafc;"><th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;letter-spacing:0.5px;">Ticker</th>' +
+        '<th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:left;letter-spacing:0.5px;">Company</th>' +
+        '<th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;letter-spacing:0.5px;">Price</th>' +
+        '<th style="padding:8px 12px;font-size:11px;font-weight:700;text-transform:uppercase;color:#64748b;text-align:right;letter-spacing:0.5px;">Change</th></tr>' +
+        moversRows + '</table>' +
+        (contextNote ? '<div style="margin-top:12px;">' + contextNote + '</div>' : '') +
+      '</div>';
+    }
+
     // Assemble full email
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
       '<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#18181b;-webkit-text-size-adjust:100%;">' +
@@ -1616,6 +1665,7 @@
         personalNoteHTML +
         aiHTML +
         semiHTML +
+        investHTML +
         blogHTML +
         videoHTML +
         // CTA
@@ -1659,6 +1709,124 @@
     });
   }
 
+  // Auto-fill from DB button
+  var nlAutofillBtn = document.getElementById('nl-autofill-btn');
+  if (nlAutofillBtn) {
+    nlAutofillBtn.addEventListener('click', function() {
+      nlAutofillBtn.disabled = true;
+      nlAutofillBtn.textContent = 'Loading...';
+
+      var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
+      var today = new Date();
+      var dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
+
+      // Set subject line
+      var subjectEl = document.getElementById('nl-subject');
+      if (subjectEl && !subjectEl.value) {
+        subjectEl.value = 'Vidhai Weekly Digest \u2014 ' + dateStr;
+      }
+
+      var pending = 4;
+      function checkDone() {
+        pending--;
+        if (pending <= 0) {
+          nlAutofillBtn.disabled = false;
+          nlAutofillBtn.textContent = '\u2705 Filled';
+          setTimeout(function() { nlAutofillBtn.textContent = 'Auto-fill from DB'; }, 2000);
+        }
+      }
+
+      // Fetch AI News (top 3 by sort_order)
+      fetch('/api/content?table=ai_news')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var items = (data || []).sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); }).slice(0, 3);
+          if (items.length > 0) {
+            nlSections.ai = items.map(function(item) {
+              return {
+                badge: item.badge || '',
+                title: item.title || '',
+                summary: item.summary || '',
+                source: item.source_name || '',
+                url: item.source_url || '',
+                date: item.date_display || ''
+              };
+            });
+            renderNLSection('ai');
+          }
+          checkDone();
+        })
+        .catch(function() { checkDone(); });
+
+      // Fetch Semiconductor News (top 3)
+      fetch('/api/content?table=semiconductor_news')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var items = (data || []).sort(function(a, b) { return (a.sort_order || 0) - (b.sort_order || 0); }).slice(0, 3);
+          if (items.length > 0) {
+            nlSections.semi = items.map(function(item) {
+              return {
+                badge: item.badge || '',
+                title: item.title || '',
+                summary: item.summary || '',
+                source: item.source_name || '',
+                url: item.source_url || '',
+                date: ''
+              };
+            });
+            renderNLSection('semi');
+          }
+          checkDone();
+        })
+        .catch(function() { checkDone(); });
+
+      // Fetch Market Movers (top 3 by absolute change_percent)
+      fetch('/api/content?table=market_movers')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var items = (data || []).sort(function(a, b) {
+            var aVal = Math.abs(parseFloat((a.change_percent || '0').replace(/[^\d.-]/g, '')) || 0);
+            var bVal = Math.abs(parseFloat((b.change_percent || '0').replace(/[^\d.-]/g, '')) || 0);
+            return bVal - aVal;
+          }).slice(0, 3);
+          if (items.length > 0) {
+            nlSections.invest = items.map(function(item) {
+              return {
+                ticker: item.ticker || '',
+                title: item.company_name || item.name || '',
+                price: item.price ? ('$' + item.price) : '',
+                change: item.change_percent || '',
+                context: item.category || ''
+              };
+            });
+            renderNLSection('invest');
+          }
+          checkDone();
+        })
+        .catch(function() { checkDone(); });
+
+      // Fetch Curated Videos (all)
+      fetch('/api/content?table=curated_videos')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var items = (data || []).slice(0, 3);
+          if (items.length > 0) {
+            nlSections.video = items.map(function(item) {
+              return {
+                title: item.title || '',
+                source: item.source_channel || '',
+                url: item.url || '',
+                duration: ''
+              };
+            });
+            renderNLSection('video');
+          }
+          checkDone();
+        })
+        .catch(function() { checkDone(); });
+    });
+  }
+
   // Send button
   var nlSendBtn = document.getElementById('nl-send-btn');
   if (nlSendBtn) {
@@ -1670,7 +1838,7 @@
       }
 
       syncNLAllFields();
-      var hasContent = ['ai','semi','blog','video'].some(function(sec) {
+      var hasContent = ['ai','semi','blog','video','invest'].some(function(sec) {
         return nlSections[sec].some(function(s) { return s.title; });
       });
       if (!hasContent) {
