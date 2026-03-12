@@ -26,6 +26,55 @@ async function supabaseFetch(path, options = {}) {
   }
 }
 
+// Disposable/temporary email domains to block
+const DISPOSABLE_DOMAINS = new Set([
+  'mailinator.com','guerrillamail.com','guerrillamailblock.com','tempmail.com','throwaway.email',
+  'temp-mail.org','10minutemail.com','trashmail.com','yopmail.com','sharklasers.com',
+  'grr.la','guerrillamail.info','guerrillamail.de','guerrillamail.net','disposableemailaddresses.emailmiser.com',
+  'maildrop.cc','dispostable.com','mailnesia.com','tempr.email','discard.email',
+  'fake.com','fakeinbox.com','mailcatch.com','tempail.com','tempmailaddress.com',
+  'emailondeck.com','33mail.com','getnada.com','mohmal.com','burnermail.io',
+  'inboxkitten.com','mail7.io','harakirimail.com','mailsac.com','anonbox.net',
+  'mytemp.email','tempinbox.com','binkmail.com','spamdecoy.net','trashmail.net',
+  'mailforspam.com','safetymail.info','filzmail.com','spamgourmet.com','incognitomail.com',
+  'mailnull.com','spamfree24.org','jetable.org','trash-mail.com','guerrillamail.org',
+  'spam4.me','grr.la','cuvox.de','armyspy.com','dayrep.com','einrot.com',
+  'fleckens.hu','gustr.com','jourrapide.com','rhyta.com','superrito.com','teleworm.us'
+]);
+
+function isValidEmail(email) {
+  // RFC 5322 simplified: local@domain.tld
+  const re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+  if (!re.test(email)) return false;
+  // Must have at least one dot in domain
+  const domain = email.split('@')[1];
+  if (!domain || !domain.includes('.')) return false;
+  // Block disposable domains
+  if (DISPOSABLE_DOMAINS.has(domain.toLowerCase())) return false;
+  return true;
+}
+
+async function checkMXRecord(domain) {
+  // Use DNS-over-HTTPS to verify domain has MX records (real mail server)
+  try {
+    const resp = await fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=MX', {
+      headers: { 'Accept': 'application/json' }
+    });
+    if (!resp.ok) return true; // If DNS lookup fails, give benefit of the doubt
+    const data = await resp.json();
+    // Status 0 = NOERROR (domain exists). Check for MX answers or at least no NXDOMAIN
+    if (data.Status === 3) return false; // NXDOMAIN — domain doesn't exist
+    if (data.Answer && data.Answer.length > 0) return true; // Has MX records
+    // No MX but domain exists — check for A record as fallback
+    const aResp = await fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=A');
+    if (!aResp.ok) return true;
+    const aData = await aResp.json();
+    return aData.Status !== 3 && aData.Answer && aData.Answer.length > 0;
+  } catch {
+    return true; // On error, allow through
+  }
+}
+
 module.exports = async function handler(req, res) {
   // CORS
   res.setHeader('Access-Control-Allow-Origin', '*');
@@ -37,8 +86,15 @@ module.exports = async function handler(req, res) {
     // ---- POST: Subscribe ----
     if (req.method === 'POST') {
       const { email, frequency } = req.body || {};
-      if (!email || !email.includes('@')) {
-        return res.status(400).json({ error: 'Valid email is required.' });
+      if (!email || !isValidEmail(email.trim())) {
+        return res.status(400).json({ error: 'Please enter a valid email address.' });
+      }
+
+      // Verify domain has MX records (catches non-existent domains)
+      const domain = email.trim().split('@')[1];
+      const hasMX = await checkMXRecord(domain);
+      if (!hasMX) {
+        return res.status(400).json({ error: 'This email domain does not appear to accept mail. Please use a valid email.' });
       }
 
       const freq = (frequency === 'monthly') ? 'monthly' : 'weekly';

@@ -42,10 +42,39 @@ module.exports = async function handler(req, res) {
   }
 
   try {
-    const { subject, htmlContent, frequency } = req.body || {};
+    const { subject, htmlContent, frequency, testEmail } = req.body || {};
 
     if (!subject || !htmlContent) {
       return res.status(400).json({ error: 'Subject and HTML content are required.' });
+    }
+
+    // "Send Draft" mode: send only to the specified test email
+    if (testEmail) {
+      const unsubUrl = '#';
+      const personalizedHTML = htmlContent.replace(/{{UNSUBSCRIBE_URL}}/g, unsubUrl);
+      try {
+        const emailRes = await fetch('https://api.resend.com/emails', {
+          method: 'POST',
+          headers: {
+            'Authorization': `Bearer ${RESEND_API_KEY}`,
+            'Content-Type': 'application/json'
+          },
+          body: JSON.stringify({
+            from: 'Vidhai <newsletter@vidhai.co>',
+            to: [testEmail],
+            subject: '[DRAFT] ' + subject,
+            html: personalizedHTML
+          })
+        });
+        if (emailRes.ok) {
+          return res.status(200).json({ success: true, message: 'Draft sent to ' + testEmail, sent: 1, failed: 0 });
+        } else {
+          const errText = await emailRes.text();
+          return res.status(500).json({ error: 'Failed to send draft: ' + errText });
+        }
+      } catch (err) {
+        return res.status(500).json({ error: 'Failed to send draft: ' + err.message });
+      }
     }
 
     // Fetch active subscribers (optionally filter by frequency)
