@@ -493,6 +493,11 @@
   }
 
   var newsletterForm = document.getElementById('newsletter-form');
+  // Set timestamp when form loads (for anti-bot timing check)
+  if (newsletterForm) {
+    var tsField = document.getElementById('newsletter-ts');
+    if (tsField) tsField.value = String(Date.now());
+  }
   if (newsletterForm) {
     newsletterForm.addEventListener('submit', function(e) {
       e.preventDefault();
@@ -510,8 +515,19 @@
         return;
       }
 
+      // Honeypot check (hidden field should be empty)
+      var hpField = document.getElementById('newsletter-hp');
+      if (hpField && hpField.value) {
+        // Silently pretend success to confuse bots
+        newsletterForm.style.display = 'none';
+        var successEl2 = document.getElementById('newsletter-success');
+        if (successEl2) { successEl2.textContent = 'Thanks for subscribing!'; successEl2.style.display = 'block'; }
+        return;
+      }
+
       var freq = newsletterForm.querySelector('input[name="frequency"]:checked');
       var frequency = freq ? freq.value : 'weekly';
+      var tsVal = (tsField && tsField.value) ? tsField.value : '';
 
       var btn = document.getElementById('newsletter-btn');
       var successEl = document.getElementById('newsletter-success');
@@ -527,7 +543,7 @@
       fetch('/api/subscribers', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
-        body: JSON.stringify({ email: email, frequency: frequency })
+        body: JSON.stringify({ email: email, frequency: frequency, _hp: (hpField ? hpField.value : ''), _ts: tsVal })
       })
       .then(function(response) { return response.json(); })
       .then(function(data) {
@@ -1417,7 +1433,7 @@
           btn.addEventListener('click', function() {
             var subId = btn.getAttribute('data-sub-id');
             var subEmail = btn.getAttribute('data-sub-email');
-            if (!confirm('Remove subscriber "' + subEmail + '"? This cannot be undone.')) return;
+            if (!confirm('Unsubscribe "' + subEmail + '"? They will be marked as unsubscribed.')) return;
             btn.disabled = true;
             btn.textContent = '...';
             fetch('/api/subscribers?id=' + encodeURIComponent(subId), { method: 'DELETE' })
@@ -1426,7 +1442,7 @@
                 if (data.success) {
                   renderSubscriberList(); // Refresh the list
                 } else {
-                  alert('Failed to remove subscriber.');
+                  alert('Failed to unsubscribe: ' + (data.error || 'Unknown error'));
                   btn.disabled = false;
                   btn.textContent = '\u00d7';
                 }

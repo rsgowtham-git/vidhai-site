@@ -707,6 +707,11 @@
       <input type="hidden" name="_template" value="table">
       <input type="hidden" name="_captcha" value="false">
       <input type="checkbox" name="_honey" style="display:none">
+      <input type="hidden" name="_ts" id="newsletter-ts" value="">
+      <!-- Anti-bot: hidden field that should remain empty -->
+      <div style="position:absolute;left:-9999px;" aria-hidden="true">
+        <input type="text" name="website" id="newsletter-hp" tabindex="-1" autocomplete="off">
+      </div>
       <div class="newsletter__freq">
         <label class="newsletter__radio">
           <input type="radio" name="frequency" value="weekly" checked>
