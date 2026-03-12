@@ -37,9 +37,11 @@ export default async function handler(req, res) {
       }
 
       const activeOnly = req.query.active !== 'false';
+      const noActiveCol = ['posts', 'market_movers'];
       const timeCol = table === 'market_movers' ? 'updated_at' : 'created_at';
-      let url = `${SUPABASE_URL}/rest/v1/${table}?order=sort_order.asc,${timeCol}.desc`;
-      if (activeOnly) {
+      const orderCol = table === 'posts' ? `${timeCol}.desc` : `sort_order.asc,${timeCol}.desc`;
+      let url = `${SUPABASE_URL}/rest/v1/${table}?order=${orderCol}`;
+      if (activeOnly && !noActiveCol.includes(table)) {
         url += '&is_active=eq.true';
       }
 

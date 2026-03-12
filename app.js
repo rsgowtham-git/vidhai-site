@@ -1989,10 +1989,11 @@
           }).slice(0, 3);
           if (items.length > 0) {
             nlSections.blog = items.map(function(item) {
+              var titleSlug = (item.title || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
               return {
                 title: item.title || '',
                 summary: item.excerpt || '',
-                url: 'https://www.vidhai.co/blog.html'
+                url: 'https://www.vidhai.co/blog.html#post-' + titleSlug
               };
             });
             renderNLSection('blog');
@@ -2441,6 +2442,19 @@
       renderTagFilters();
       renderBlogPage();
       renderPagination();
+      // Deep-link: auto-open post from URL hash (e.g. blog.html#post-the-semiconductor-equipment-paradox)
+      var hash = window.location.hash;
+      if (hash && hash.indexOf('#post-') === 0) {
+        var slug = hash.substring(6);
+        var posts = getPosts();
+        for (var pi = 0; pi < posts.length; pi++) {
+          var postSlug = (posts[pi].title || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
+          if (postSlug === slug) {
+            openBlog(pi);
+            break;
+          }
+        }
+      }
     } else {
       renderBlogCards();
     }
