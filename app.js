@@ -1448,9 +1448,9 @@
   // NEWSLETTER COMPOSE & SEND (Multi-Section)
   // ========================================
 
-  var nlSections = { ai: [], semi: [], blog: [], video: [], invest: [] };
-  var nlSectionLimits = { ai: 4, semi: 3, blog: 2, video: 3, invest: 3 };
-  var nlSectionLabels = { ai: 'AI News', semi: 'Semiconductor', blog: 'Blog', video: 'Video', invest: 'Market Movers' };
+  var nlSections = { ai: [], semi: [], blog: [], video: [], invest: [], ipo: [] };
+  var nlSectionLimits = { ai: 4, semi: 3, blog: 2, video: 3, invest: 3, ipo: 3 };
+  var nlSectionLabels = { ai: 'AI News', semi: 'Semiconductor', blog: 'Blog', video: 'Video', invest: 'Market Movers', ipo: 'Upcoming IPOs' };
 
   function renderNLSection(section) {
     var listEl = document.getElementById('nl-' + section + '-stories-list') || document.getElementById('nl-' + section + '-list');
@@ -1497,6 +1497,22 @@
           '<textarea class="admin-textarea nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="summary" rows="2" placeholder="Short excerpt or teaser...">' + escapeHTML(item.summary) + '</textarea></div>' +
           '<div class="admin-field"><label>URL</label>' +
           '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="url" value="' + escapeHTML(item.url) + '" placeholder="https://vidhai.co/blog.html#..."></div>' +
+        '</div>';
+      }).join('');
+    } else if (section === 'ipo') {
+      listEl.innerHTML = items.map(function(item, i) {
+        return '<div class="nl-story-item">' +
+          '<button type="button" class="nl-story-remove" data-section="' + section + '" data-remove-index="' + i + '">&times;</button>' +
+          '<div class="admin-field"><label>Company Name</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="title" value="' + escapeHTML(item.title) + '" placeholder="e.g. Cerebras Systems"></div>' +
+          '<div class="admin-field"><label>Expected Date</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="date" value="' + escapeHTML(item.date || '') + '" placeholder="e.g. Q2 2026"></div>' +
+          '<div class="admin-field"><label>Valuation</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="valuation" value="' + escapeHTML(item.valuation || '') + '" placeholder="e.g. $8B"></div>' +
+          '<div class="admin-field"><label>Sector</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="category" value="' + escapeHTML(item.category || '') + '" placeholder="e.g. AI, Semiconductor"></div>' +
+          '<div class="admin-field"><label>Source URL</label>' +
+          '<input type="text" class="admin-input nl-item-field" data-section="' + section + '" data-index="' + i + '" data-field="url" value="' + escapeHTML(item.url || '') + '" placeholder="https://..."></div>' +
         '</div>';
       }).join('');
     } else {
@@ -1557,6 +1573,8 @@
         nlSections[section].push({ title: '', source: '', url: '', duration: '' });
       } else if (section === 'blog') {
         nlSections[section].push({ title: '', summary: '', url: '' });
+      } else if (section === 'ipo') {
+        nlSections[section].push({ title: '', date: '', valuation: '', category: '', url: '' });
       } else {
         nlSections[section].push({ badge: '', title: '', summary: '', source: '', url: '', date: '' });
       }
@@ -1684,6 +1702,26 @@
       '</div>';
     }
 
+    // Upcoming IPOs
+    var ipoHTML = '';
+    var ipoItems = (nlSections.ipo || []).filter(function(s) { return s.title; });
+    if (ipoItems.length > 0) {
+      var ipoRows = ipoItems.map(function(s) {
+        var link = s.url ? '<a href="' + escapeHTML(s.url) + '" style="color:#18181b;text-decoration:none;font-size:13px;font-weight:600;">' + escapeHTML(s.title) + '</a>' : '<span style="font-size:13px;font-weight:600;color:#18181b;">' + escapeHTML(s.title) + '</span>';
+        var meta = [];
+        if (s.date) meta.push(escapeHTML(s.date));
+        if (s.valuation) meta.push('~' + escapeHTML(s.valuation));
+        if (s.category) meta.push(escapeHTML(s.category));
+        var metaStr = meta.length > 0 ? '<div style="font-size:11px;color:#a1a1aa;margin-top:2px;">' + meta.join(' &bull; ') + '</div>' : '';
+        return '<div style="padding:8px 0;border-bottom:1px solid #f4f4f5;">' + link + metaStr + '</div>';
+      }).join('');
+      ipoHTML = '<div style="padding:20px 32px;border-bottom:1px solid #e4e4e7;">' +
+        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:10px;">UPCOMING IPOs</div>' +
+        ipoRows +
+        '<a href="' + siteUrl + '/#investments" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#0d9488;text-decoration:none;">See all on Vidhai &rarr;</a>' +
+      '</div>';
+    }
+
     // Assemble full email — compact, headline-driven
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
       '<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#18181b;-webkit-text-size-adjust:100%;">' +
@@ -1699,6 +1737,7 @@
         aiHTML +
         semiHTML +
         investHTML +
+        ipoHTML +
         blogHTML +
         videoHTML +
         // CTA
@@ -1759,7 +1798,7 @@
         subjectEl.value = 'Vidhai Weekly Digest \u2014 ' + dateStr;
       }
 
-      var pending = 4;
+      var pending = 6;
       function checkDone() {
         pending--;
         if (pending <= 0) {
@@ -1857,6 +1896,46 @@
           checkDone();
         })
         .catch(function() { checkDone(); });
+
+      // Fetch Blog Posts (latest 3)
+      fetch('/api/content?table=posts')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var items = (data || []).filter(function(p) { return p.status === 'published'; }).slice(0, 3);
+          if (items.length > 0) {
+            nlSections.blog = items.map(function(item) {
+              return {
+                title: item.title || '',
+                summary: item.excerpt || '',
+                url: 'https://www.vidhai.co/blog.html#post-' + item.slug
+              };
+            });
+            renderNLSection('blog');
+          }
+          checkDone();
+        })
+        .catch(function() { checkDone(); });
+
+      // Fetch Upcoming IPOs (top 3)
+      fetch('/api/content?table=upcoming_ipos')
+        .then(function(r) { return r.json(); })
+        .then(function(data) {
+          var items = (data || []).filter(function(i) { return i.is_active; }).slice(0, 3);
+          if (items.length > 0) {
+            nlSections.ipo = items.map(function(item) {
+              return {
+                title: item.company_name || '',
+                date: item.expected_date || '',
+                valuation: item.estimated_valuation || '',
+                category: item.category || '',
+                url: item.source_url || ''
+              };
+            });
+            renderNLSection('ipo');
+          }
+          checkDone();
+        })
+        .catch(function() { checkDone(); });
     });
   }
 
@@ -1868,7 +1947,7 @@
       return null;
     }
     syncNLAllFields();
-    var hasContent = ['ai','semi','blog','video','invest'].some(function(sec) {
+    var hasContent = ['ai','semi','blog','video','invest','ipo'].some(function(sec) {
       return nlSections[sec].some(function(s) { return s.title; });
     });
     if (!hasContent) {
