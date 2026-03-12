@@ -3341,4 +3341,136 @@
     }, 600);
   })();
 
+  // ========================================
+  // FLOATING SEARCH
+  // ========================================
+
+  var searchFab = document.getElementById('search-fab-btn');
+  var searchOverlay = document.getElementById('search-modal-overlay');
+  var searchInput = document.getElementById('search-modal-input');
+  var searchResults = document.getElementById('search-modal-results');
+  var searchHint = document.getElementById('search-modal-hint');
+
+  function openSearch() {
+    if (!searchOverlay) return;
+    searchOverlay.classList.add('is-open');
+    if (searchInput) {
+      searchInput.value = '';
+      searchInput.focus();
+    }
+    if (searchResults) searchResults.innerHTML = '';
+    if (searchHint) searchHint.style.display = '';
+  }
+
+  function closeSearch() {
+    if (searchOverlay) searchOverlay.classList.remove('is-open');
+  }
+
+  if (searchFab) {
+    searchFab.addEventListener('click', openSearch);
+  }
+
+  if (searchOverlay) {
+    searchOverlay.addEventListener('click', function(e) {
+      if (e.target === searchOverlay) closeSearch();
+    });
+  }
+
+  document.addEventListener('keydown', function(e) {
+    if ((e.metaKey || e.ctrlKey) && e.key === 'k') {
+      e.preventDefault();
+      if (searchOverlay && searchOverlay.classList.contains('is-open')) {
+        closeSearch();
+      } else {
+        openSearch();
+      }
+    }
+    if (e.key === 'Escape' && searchOverlay && searchOverlay.classList.contains('is-open')) {
+      closeSearch();
+    }
+  });
+
+  // Build search index from visible page content
+  function buildSearchIndex() {
+    var items = [];
+
+    // Sections defined by selectors
+    var sections = [
+      { name: 'AI News', selector: '#news .news-card', titleSel: '.news-card__title', href: '#news' },
+      { name: 'Semiconductors', selector: '#semiconductors .news-card', titleSel: '.news-card__title', href: '#semiconductors' },
+      { name: 'Training', selector: '#training .course-card', titleSel: '.course-card__title', href: '#training' },
+      { name: 'Industries', selector: '#industries .impact-card', titleSel: '.impact-card__title', href: '#industries' },
+      { name: 'Tools', selector: '#tools .tool-card', titleSel: '.tool-card__name', href: '#tools' },
+      { name: 'Investments', selector: '.invest-movers__table tbody tr', titleSel: null, href: '#investments' },
+      { name: 'Blog', selector: '.blog-card', titleSel: '.blog-card__title', href: '#blog' }
+    ];
+
+    sections.forEach(function(sec) {
+      var els = document.querySelectorAll(sec.selector);
+      els.forEach(function(el) {
+        var title = '';
+        if (sec.titleSel) {
+          var tEl = el.querySelector(sec.titleSel);
+          if (tEl) title = tEl.textContent.trim();
+        } else {
+          // Table row — grab text from first 3 cells
+          var cells = el.querySelectorAll('td');
+          var parts = [];
+          for (var c = 0; c < Math.min(cells.length, 3); c++) {
+            parts.push(cells[c].textContent.trim());
+          }
+          title = parts.join(' — ');
+        }
+        if (title) {
+          var desc = '';
+          var descEl = el.querySelector('.news-card__summary, .course-card__desc, .impact-card__summary, .tool-card__desc, .blog-card__excerpt');
+          if (descEl) desc = descEl.textContent.trim();
+          items.push({ title: title, section: sec.name, href: sec.href, desc: desc });
+        }
+      });
+    });
+
+    return items;
+  }
+
+  var searchIndex = null;
+
+  if (searchInput) {
+    searchInput.addEventListener('input', function() {
+      if (!searchIndex) searchIndex = buildSearchIndex();
+      var query = searchInput.value.trim().toLowerCase();
+      if (!query) {
+        if (searchResults) searchResults.innerHTML = '';
+        if (searchHint) searchHint.style.display = '';
+        return;
+      }
+      if (searchHint) searchHint.style.display = 'none';
+
+      var terms = query.split(/\s+/);
+      var matches = searchIndex.filter(function(item) {
+        var haystack = (item.title + ' ' + item.section + ' ' + item.desc).toLowerCase();
+        return terms.every(function(t) { return haystack.indexOf(t) >= 0; });
+      }).slice(0, 8);
+
+      if (matches.length === 0) {
+        searchResults.innerHTML = '<div class="search-modal__empty">No results found</div>';
+        return;
+      }
+
+      searchResults.innerHTML = matches.map(function(m) {
+        return '<a class="search-result-item" href="' + escapeHTML(m.href) + '">' +
+          '<div class="search-result-item__title">' + escapeHTML(m.title) + '</div>' +
+          '<div class="search-result-item__section">' + escapeHTML(m.section) + '</div>' +
+        '</a>';
+      }).join('');
+
+      // Bind click to close search and scroll
+      searchResults.querySelectorAll('.search-result-item').forEach(function(link) {
+        link.addEventListener('click', function() {
+          closeSearch();
+        });
+      });
+    });
+  }
+
 })();
