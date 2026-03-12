@@ -481,6 +481,17 @@
   // ========================================
   // NEWSLETTER FORM (Supabase + Resend)
   // ========================================
+  // Client-side email validation helper
+  var disposableDomains = ['mailinator.com','guerrillamail.com','tempmail.com','throwaway.email','temp-mail.org','10minutemail.com','trashmail.com','yopmail.com','sharklasers.com','maildrop.cc','dispostable.com','mailnesia.com','tempr.email','discard.email','fake.com','fakeinbox.com','mailcatch.com','tempail.com','tempmailaddress.com','emailondeck.com','getnada.com','mohmal.com','burnermail.io','inboxkitten.com','mail7.io','harakirimail.com','mailsac.com','anonbox.net','mytemp.email','tempinbox.com','trash-mail.com','guerrillamail.org','spam4.me','cuvox.de','armyspy.com','dayrep.com','einrot.com','fleckens.hu','gustr.com','jourrapide.com','rhyta.com','superrito.com','teleworm.us'];
+  function isValidEmailClient(email) {
+    var re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
+    if (!re.test(email)) return false;
+    var domain = email.split('@')[1];
+    if (!domain || !domain.includes('.')) return false;
+    if (disposableDomains.indexOf(domain.toLowerCase()) >= 0) return false;
+    return true;
+  }
+
   var newsletterForm = document.getElementById('newsletter-form');
   if (newsletterForm) {
     newsletterForm.addEventListener('submit', function(e) {
@@ -488,6 +499,16 @@
       var emailInput = document.getElementById('newsletter-email');
       var email = emailInput.value.trim();
       if (!email) return;
+
+      var errorEl = document.getElementById('newsletter-error');
+      // Client-side validation
+      if (!isValidEmailClient(email)) {
+        if (errorEl) {
+          errorEl.textContent = 'Please enter a valid email address. Disposable/temporary emails are not accepted.';
+          errorEl.style.display = 'block';
+        }
+        return;
+      }
 
       var freq = newsletterForm.querySelector('input[name="frequency"]:checked');
       var frequency = freq ? freq.value : 'weekly';
@@ -1386,9 +1407,37 @@
               '<span>' + escapeHTML(sub.frequency || 'weekly') + '</span>' +
               '<span>' + dateStr + '</span>' +
               '<span class="admin-subscriber-item__badge ' + badgeClass + '">' + escapeHTML(sub.status) + '</span>' +
+              '<button type="button" class="admin-subscriber-remove" data-sub-id="' + sub.id + '" data-sub-email="' + escapeHTML(sub.email) + '" title="Remove subscriber">&times;</button>' +
             '</div>' +
           '</div>';
         }).join('');
+
+        // Bind remove buttons
+        listEl.querySelectorAll('.admin-subscriber-remove').forEach(function(btn) {
+          btn.addEventListener('click', function() {
+            var subId = btn.getAttribute('data-sub-id');
+            var subEmail = btn.getAttribute('data-sub-email');
+            if (!confirm('Remove subscriber "' + subEmail + '"? This cannot be undone.')) return;
+            btn.disabled = true;
+            btn.textContent = '...';
+            fetch('/api/subscribers?id=' + encodeURIComponent(subId), { method: 'DELETE' })
+              .then(function(r) { return r.json(); })
+              .then(function(data) {
+                if (data.success) {
+                  renderSubscriberList(); // Refresh the list
+                } else {
+                  alert('Failed to remove subscriber.');
+                  btn.disabled = false;
+                  btn.textContent = '\u00d7';
+                }
+              })
+              .catch(function() {
+                alert('Network error. Please try again.');
+                btn.disabled = false;
+                btn.textContent = '\u00d7';
+              });
+          });
+        });
       })
       .catch(function() {
         listEl.innerHTML = '<p class="admin-empty">Failed to load subscribers. Is the API connected?</p>';
@@ -1811,48 +1860,96 @@
     });
   }
 
-  // Send button
-  var nlSendBtn = document.getElementById('nl-send-btn');
-  if (nlSendBtn) {
-    nlSendBtn.addEventListener('click', function() {
-      var subject = (document.getElementById('nl-subject') || {}).value;
-      if (!subject) {
-        alert('Please enter a subject line.');
-        return;
-      }
+  // Helper: validate newsletter has content
+  function validateNewsletterContent() {
+    var subject = (document.getElementById('nl-subject') || {}).value;
+    if (!subject) {
+      alert('Please enter a subject line.');
+      return null;
+    }
+    syncNLAllFields();
+    var hasContent = ['ai','semi','blog','video','invest'].some(function(sec) {
+      return nlSections[sec].some(function(s) { return s.title; });
+    });
+    if (!hasContent) {
+      alert('Add at least one story to the newsletter.');
+      return null;
+    }
+    return { subject: subject, htmlContent: buildNewsletterHTML() };
+  }
 
-      syncNLAllFields();
-      var hasContent = ['ai','semi','blog','video','invest'].some(function(sec) {
-        return nlSections[sec].some(function(s) { return s.title; });
-      });
-      if (!hasContent) {
-        alert('Add at least one story to the newsletter.');
-        return;
-      }
+  // Send Draft to Me button
+  var nlDraftBtn = document.getElementById('nl-draft-btn');
+  if (nlDraftBtn) {
+    nlDraftBtn.addEventListener('click', function() {
+      var content = validateNewsletterContent();
+      if (!content) return;
 
-      if (!confirm('Send this newsletter to all active subscribers? This cannot be undone.')) return;
-
-      var htmlContent = buildNewsletterHTML();
-      var audience = (document.getElementById('nl-audience') || {}).value || 'all';
       var statusEl = document.getElementById('nl-compose-status');
-
-      nlSendBtn.disabled = true;
-      nlSendBtn.textContent = 'Sending...';
+      nlDraftBtn.disabled = true;
+      nlDraftBtn.textContent = 'Sending draft...';
       if (statusEl) statusEl.style.display = 'none';
 
       fetch('/api/newsletter-send', {
         method: 'POST',
         headers: { 'Content-Type': 'application/json' },
         body: JSON.stringify({
-          subject: subject,
-          htmlContent: htmlContent,
+          subject: content.subject,
+          htmlContent: content.htmlContent,
+          testEmail: 'rsgowtham@gmail.com'
+        })
+      })
+      .then(function(r) { return r.json(); })
+      .then(function(data) {
+        nlDraftBtn.disabled = false;
+        nlDraftBtn.textContent = 'Send Draft to Me';
+        if (statusEl) {
+          statusEl.textContent = data.success ? ('\u2705 ' + data.message) : ('\u274c ' + (data.error || 'Failed to send draft.'));
+          statusEl.style.display = 'block';
+          statusEl.style.color = data.success ? '#22c55e' : '#f87171';
+        }
+      })
+      .catch(function() {
+        nlDraftBtn.disabled = false;
+        nlDraftBtn.textContent = 'Send Draft to Me';
+        if (statusEl) {
+          statusEl.textContent = '\u274c Network error. Please try again.';
+          statusEl.style.display = 'block';
+          statusEl.style.color = '#f87171';
+        }
+      });
+    });
+  }
+
+  // Publish to Subscribers button
+  var nlSendBtn = document.getElementById('nl-send-btn');
+  if (nlSendBtn) {
+    nlSendBtn.addEventListener('click', function() {
+      var content = validateNewsletterContent();
+      if (!content) return;
+
+      if (!confirm('Publish this newsletter to all active subscribers? This cannot be undone.')) return;
+
+      var audience = (document.getElementById('nl-audience') || {}).value || 'all';
+      var statusEl = document.getElementById('nl-compose-status');
+
+      nlSendBtn.disabled = true;
+      nlSendBtn.textContent = 'Publishing...';
+      if (statusEl) statusEl.style.display = 'none';
+
+      fetch('/api/newsletter-send', {
+        method: 'POST',
+        headers: { 'Content-Type': 'application/json' },
+        body: JSON.stringify({
+          subject: content.subject,
+          htmlContent: content.htmlContent,
           frequency: audience
         })
       })
       .then(function(r) { return r.json(); })
       .then(function(data) {
         nlSendBtn.disabled = false;
-        nlSendBtn.textContent = 'Send Newsletter';
+        nlSendBtn.textContent = 'Publish to Subscribers';
         if (statusEl) {
           statusEl.textContent = data.success ? ('\u2705 ' + data.message) : ('\u274c ' + (data.error || 'Failed to send.'));
           statusEl.style.display = 'block';
@@ -1861,7 +1958,7 @@
       })
       .catch(function() {
         nlSendBtn.disabled = false;
-        nlSendBtn.textContent = 'Send Newsletter';
+        nlSendBtn.textContent = 'Publish to Subscribers';
         if (statusEl) {
           statusEl.textContent = '\u274c Network error. Please try again.';
           statusEl.style.display = 'block';
@@ -2648,34 +2745,6 @@
     });
   }
 
-  function initTradingViewChart() {
-    var chartContainer = document.getElementById('invest-chart-container');
-    if (!chartContainer) return;
-    if (typeof TradingView === 'undefined') return;
-
-    var isDark = document.documentElement.getAttribute('data-theme') === 'dark';
-
-    // Clear previous content
-    chartContainer.innerHTML = '<div id="tradingview_chart" style="height:500px;"></div>';
-
-    new TradingView.widget({ // eslint-disable-line no-undef
-      'autosize': true,
-      'symbol': 'AMEX:SPY',
-      'interval': 'D',
-      'timezone': 'America/Los_Angeles',
-      'theme': isDark ? 'dark' : 'light',
-      'style': '2',
-      'locale': 'en',
-      'enable_publishing': false,
-      'allow_symbol_change': true,
-      'hide_side_toolbar': false,
-      'studies': [],
-      'container_id': 'tradingview_chart',
-      'height': 500,
-      'width': '100%'
-    });
-  }
-
   // ========================================
   // ADMIN CONTENT CRUD
   // ========================================
@@ -3067,9 +3136,21 @@
     renderIndustryImpact();
     renderMarketMovers();
     renderUpcomingIPOs();
-    initTradingViewChart();
     renderAITools();
   }
 
+  // Handle hash-based deep linking after dynamic content has loaded
+  // Waits briefly for dynamic content to render, then scrolls to the target
+  (function handleDeepLink() {
+    var hash = window.location.hash;
+    if (!hash) return;
+    // Small delay to let dynamic content render and shift layout
+    setTimeout(function() {
+      var target = document.querySelector(hash);
+      if (target) {
+        target.scrollIntoView({ behavior: 'smooth', block: 'start' });
+      }
+    }, 600);
+  })();
 
 })();

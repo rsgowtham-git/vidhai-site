@@ -240,7 +240,7 @@
   <section id="investments" class="section">
     <div class="section__header reveal">
       <h2 class="section__title">Investments</h2>
-      <p class="section__subtitle">AI &amp; semiconductor market movers, interactive charts, and upcoming IPOs</p>
+      <p class="section__subtitle">AI &amp; semiconductor market movers and upcoming IPOs</p>
     </div>
 
     <!-- Allocation badges -->
@@ -272,15 +272,6 @@
           </tbody>
         </table>
         <p id="movers-timestamp" class="invest-timestamp" style="display:none;"></p>
-      </div>
-    </div>
-
-    <!-- Interactive Chart -->
-    <div class="invest-chart reveal">
-      <h3 class="invest-subtitle">Market Performance</h3>
-      <p class="invest-chart__hint">S&amp;P 500 and Nasdaq shown by default. Use the toolbar to add any ticker for comparison.</p>
-      <div class="invest-chart__container" id="invest-chart-container">
-        <!-- TradingView Advanced Chart Widget inserted by JS -->
       </div>
     </div>
 
@@ -503,9 +494,13 @@
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round"><path d="M1 12s4-8 11-8 11 8 11 8-4 8-11 8-11-8-11-8z"/><circle cx="12" cy="12" r="3"/></svg>
             Preview
           </button>
+          <button type="button" class="admin-btn admin-btn--draft" id="nl-draft-btn">
+            <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="4" width="20" height="16" rx="2"/><path d="m22 7-8.97 5.7a1.94 1.94 0 0 1-2.06 0L2 7"/></svg>
+            Send Draft to Me
+          </button>
           <button type="button" class="admin-btn admin-btn--primary" id="nl-send-btn">
             <svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><line x1="22" y1="2" x2="11" y2="13"/><polygon points="22 2 15 22 11 13 2 9 22 2"/></svg>
-            Send Newsletter
+            Publish to Subscribers
           </button>
         </div>
         <p class="nl-compose-status" id="nl-compose-status" style="display:none"></p>
@@ -772,7 +767,6 @@
 <noscript><style>.reveal,.stagger,.stagger>*{opacity:1!important;}</style></noscript>
 <script src="https://cdn.jsdelivr.net/npm/quill@2.0.3/dist/quill.min.js"></script>
 <script src="https://cdn.jsdelivr.net/npm/mammoth@1.8.0/mammoth.browser.min.js"></script>
-<script type="text/javascript" src="https://s3.tradingview.com/tv.js"></script>
 <script src="./app.js"></script>
 </body>
 </html>

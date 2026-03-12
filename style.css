@@ -6,6 +6,11 @@
 /* --- Google Fonts --- */
 @import url('https://fonts.googleapis.com/css2?family=DM+Sans:ital,opsz,wght@0,9..40,300;0,9..40,400;0,9..40,500;0,9..40,600;0,9..40,700;1,9..40,400&family=Inter:wght@300;400;500;600&display=swap');
 
+html {
+  scroll-behavior: smooth;
+  scroll-padding-top: 80px; /* Account for sticky nav */
+}
+
 /* --- Type Scale --- */
 :root {
   --text-xs:   clamp(0.75rem,  0.7rem  + 0.25vw, 0.8125rem);
@@ -3101,6 +3106,30 @@ a:hover {
   color: #f87171;
 }
 
+.admin-subscriber-remove {
+  background: none;
+  border: 1px solid rgba(248, 113, 113, 0.3);
+  color: #f87171;
+  cursor: pointer;
+  font-size: 16px;
+  font-weight: 700;
+  width: 26px;
+  height: 26px;
+  border-radius: 6px;
+  display: flex;
+  align-items: center;
+  justify-content: center;
+  transition: background 0.15s, border-color 0.15s;
+  flex-shrink: 0;
+  line-height: 1;
+  padding: 0;
+}
+
+.admin-subscriber-remove:hover {
+  background: rgba(248, 113, 113, 0.15);
+  border-color: #f87171;
+}
+
 /* ========================================
    NEWSLETTER COMPOSE
    ======================================== */
@@ -3170,6 +3199,15 @@ a:hover {
 }
 .admin-btn--autofill:hover {
   background: rgba(13, 148, 136, 0.1);
+}
+
+.admin-btn--draft {
+  background: var(--color-surface-2);
+  border: 1px solid #f59e0b;
+  color: #f59e0b;
+}
+.admin-btn--draft:hover {
+  background: rgba(245, 158, 11, 0.1);
 }
 
 .nl-compose-status {
