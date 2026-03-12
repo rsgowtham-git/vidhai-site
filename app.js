@@ -1276,7 +1276,7 @@
     var plainExcerpt = stripHTMLTags(post.excerpt || post.content).substring(0, 300);
     var message = '\uD83D\uDCDD New on Vidhai \u2014 ' + post.title + '\n\n' +
       plainExcerpt + '\n\n' +
-      'Read the full article \u2192 https://vidhai.co\n\n' +
+      'Read the full article \u2192 https://www.vidhai.co/blog.html\n\n' +
       '#AI #Vidhai #TechInsights';
 
     document.getElementById('linkedin-message').value = message;
