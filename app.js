@@ -550,7 +550,7 @@
         if (data.success) {
           newsletterForm.style.display = 'none';
           if (successEl) {
-            successEl.textContent = data.message || 'Thanks for subscribing! Check your inbox for a welcome message.';
+            successEl.textContent = data.message || 'Almost there! Check your inbox and click the confirmation link to complete your subscription.';
             successEl.style.display = 'block';
           }
         } else {
@@ -1395,12 +1395,14 @@
         }
 
         var activeCount = data.filter(function(s) { return s.status === 'active'; }).length;
+        var pendingCount = data.filter(function(s) { return s.status === 'pending'; }).length;
         var unsubCount = data.filter(function(s) { return s.status === 'unsubscribed'; }).length;
 
         if (statsEl) {
           statsEl.innerHTML =
             '<div class="stat"><span class="stat-number">' + data.length + '</span> total</div>' +
             '<div class="stat"><span class="stat-number active">' + activeCount + '</span> active</div>' +
+            (pendingCount > 0 ? '<div class="stat"><span class="stat-number" style="color:#f59e0b;">' + pendingCount + '</span> pending</div>' : '') +
             '<div class="stat"><span class="stat-number unsub">' + unsubCount + '</span> unsubscribed</div>';
         }
 
@@ -1415,7 +1417,7 @@
             dateStr = new Date(sub.subscribed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
           } catch(e) { /* ignore */ }
 
-          var badgeClass = sub.status === 'active' ? 'active' : 'unsubscribed';
+          var badgeClass = sub.status === 'active' ? 'active' : (sub.status === 'pending' ? 'pending' : 'unsubscribed');
 
           return '<div class="admin-subscriber-item">' +
             '<span class="admin-subscriber-item__email">' + escapeHTML(sub.email) + '</span>' +
@@ -1633,13 +1635,24 @@
       return '<div style="padding:8px 0;border-bottom:1px solid #f4f4f5;">' + badgeHTML + link + '</div>';
     }
 
-    // Personal note
+    // Personal note — clean inline text style matching "Better" format
     var personalNoteHTML = '';
     if (personalNote.trim()) {
-      personalNoteHTML = '<div style="padding:24px 32px;border-bottom:1px solid #e4e4e7;">' +
-        '<div style="background:#f8fafc;border-left:3px solid #2dd4bf;padding:14px 18px;border-radius:0 8px 8px 0;font-size:14px;line-height:1.6;color:#334155;">' +
+      personalNoteHTML = '<div style="padding:20px 32px 0 32px;">' +
+        '<p style="font-size:15px;line-height:1.7;color:#334155;margin:0;">' +
         escapeHTML(personalNote).replace(/\n/g, '<br>') +
-        '</div></div>';
+        '</p></div>';
+    }
+
+    // Section header helper — bold black text with dark underline (matching "Better" format)
+    function sectionHeader(label) {
+      return '<div style="font-size:13px;font-weight:800;letter-spacing:1.5px;text-transform:uppercase;color:#18181b;margin-bottom:4px;">' + label + '</div>' +
+        '<div style="height:2px;background:#18181b;margin-bottom:12px;"></div>';
+    }
+
+    // Section link helper
+    function sectionLink(text, href) {
+      return '<a href="' + href + '" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:500;color:#6b7280;text-decoration:none;">' + text + ' &rarr;</a>';
     }
 
     // AI news headlines
@@ -1647,10 +1660,10 @@
     var aiStories = (nlSections.ai || []).filter(function(s) { return s.title; });
     if (aiStories.length > 0) {
       var aiItems = aiStories.map(function(s) { return headlineLink(s.title, s.url, s.badge); }).join('');
-      aiHTML = '<div style="padding:20px 32px;border-bottom:1px solid #e4e4e7;">' +
-        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:10px;">AI NEWS</div>' +
+      aiHTML = '<div style="padding:20px 32px;">' +
+        sectionHeader('AI NEWS') +
         aiItems +
-        '<a href="' + siteUrl + '/#news" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#0d9488;text-decoration:none;">Read all on Vidhai &rarr;</a>' +
+        sectionLink('Read all on Vidhai', siteUrl + '/#news') +
       '</div>';
     }
 
@@ -1659,10 +1672,10 @@
     var semiStories = (nlSections.semi || []).filter(function(s) { return s.title; });
     if (semiStories.length > 0) {
       var semiItems = semiStories.map(function(s) { return headlineLink(s.title, s.url, s.badge); }).join('');
-      semiHTML = '<div style="padding:20px 32px;border-bottom:1px solid #e4e4e7;">' +
-        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:10px;">SEMICONDUCTORS</div>' +
+      semiHTML = '<div style="padding:20px 32px;">' +
+        sectionHeader('SEMICONDUCTOR INSIGHTS') +
         semiItems +
-        '<a href="' + siteUrl + '/#semiconductors" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#0d9488;text-decoration:none;">Read all on Vidhai &rarr;</a>' +
+        sectionLink('Read all on Vidhai', siteUrl + '/#semiconductors') +
       '</div>';
     }
 
@@ -1676,15 +1689,15 @@
         var changeColor = isDown ? '#ef4444' : '#22c55e';
         var arrow = isDown ? '\u25BC' : '\u25B2';
         return '<tr>' +
-          '<td style="padding:6px 10px;font-size:13px;font-weight:700;color:#0d9488;">' + escapeHTML(s.ticker || '') + '</td>' +
+          '<td style="padding:6px 10px 6px 0;font-size:13px;font-weight:700;color:#18181b;">' + escapeHTML(s.ticker || '') + '</td>' +
           '<td style="padding:6px 10px;font-size:13px;color:#334155;">' + escapeHTML(s.title || '') + '</td>' +
           '<td style="padding:6px 10px;font-size:13px;font-weight:600;color:' + changeColor + ';text-align:right;">' + arrow + ' ' + escapeHTML(changeVal) + '</td>' +
         '</tr>';
       }).join('');
-      investHTML = '<div style="padding:20px 32px;border-bottom:1px solid #e4e4e7;">' +
-        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:10px;">MARKET MOVERS</div>' +
-        '<table style="width:100%;border-collapse:collapse;">' + moversRows + '</table>' +
-        '<a href="' + siteUrl + '/#investments" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#0d9488;text-decoration:none;">See live prices on Vidhai &rarr;</a>' +
+      investHTML = '<div style="padding:20px 32px;">' +
+        sectionHeader('MARKET MOVERS') +
+        '<table style="width:100%;border-collapse:collapse;"><tr><td style="padding:4px 10px 4px 0;font-size:11px;font-weight:700;color:#6b7280;">Ticker</td><td style="padding:4px 10px;font-size:11px;font-weight:700;color:#6b7280;">Company</td><td style="padding:4px 10px;font-size:11px;font-weight:700;color:#6b7280;text-align:right;">Change</td></tr>' + moversRows + '</table>' +
+        sectionLink('See all movers on Vidhai', siteUrl + '/#investments') +
       '</div>';
     }
 
@@ -1696,10 +1709,9 @@
         var link = s.url ? '<a href="' + escapeHTML(s.url) + '" style="color:#0f172a;text-decoration:none;font-size:14px;font-weight:600;">' + escapeHTML(s.title) + '</a>' : '<span style="font-size:14px;font-weight:600;color:#0f172a;">' + escapeHTML(s.title) + '</span>';
         return '<div style="padding:8px 0;border-bottom:1px solid #f4f4f5;">' + link + '</div>';
       }).join('');
-      blogHTML = '<div style="padding:20px 32px;border-bottom:1px solid #e4e4e7;">' +
-        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:10px;">FROM THE BLOG</div>' +
+      blogHTML = '<div style="padding:20px 32px;">' +
+        sectionHeader('FROM THE BLOG') +
         blogItems +
-        '<a href="' + siteUrl + '/blog.html" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#0d9488;text-decoration:none;">Read on Vidhai Blog &rarr;</a>' +
       '</div>';
     }
 
@@ -1712,8 +1724,8 @@
         var meta = escapeHTML(s.source || '') + (s.duration ? ' &bull; ' + escapeHTML(s.duration) : '');
         return '<div style="padding:8px 0;border-bottom:1px solid #f4f4f5;">' + link + (meta ? '<div style="font-size:11px;color:#a1a1aa;margin-top:2px;">' + meta + '</div>' : '') + '</div>';
       }).join('');
-      videoHTML = '<div style="padding:20px 32px;border-bottom:1px solid #e4e4e7;">' +
-        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:10px;">WORTH WATCHING</div>' +
+      videoHTML = '<div style="padding:20px 32px;">' +
+        sectionHeader('CURATED VIDEOS') +
         videoItems +
       '</div>';
     }
@@ -1731,46 +1743,40 @@
         var metaStr = meta.length > 0 ? '<div style="font-size:11px;color:#a1a1aa;margin-top:2px;">' + meta.join(' &bull; ') + '</div>' : '';
         return '<div style="padding:8px 0;border-bottom:1px solid #f4f4f5;">' + link + metaStr + '</div>';
       }).join('');
-      ipoHTML = '<div style="padding:20px 32px;border-bottom:1px solid #e4e4e7;">' +
-        '<div style="font-size:11px;font-weight:700;letter-spacing:1.5px;text-transform:uppercase;color:#0d9488;margin-bottom:10px;">UPCOMING IPOs</div>' +
+      ipoHTML = '<div style="padding:20px 32px;">' +
+        sectionHeader('UPCOMING IPOs') +
         ipoRows +
-        '<a href="' + siteUrl + '/#investments" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:600;color:#0d9488;text-decoration:none;">See all on Vidhai &rarr;</a>' +
+        sectionLink('See all on Vidhai', siteUrl + '/#investments') +
       '</div>';
     }
 
-    // Assemble full email — compact, headline-driven
+    // Assemble full email — clean, headline-driven, matching "Better" format
     return '<!DOCTYPE html><html lang="en"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>' +
-      '<body style="margin:0;padding:0;background:#f4f4f5;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#18181b;-webkit-text-size-adjust:100%;">' +
-      '<div style="width:100%;background:#f4f4f5;padding:32px 0;">' +
-      '<div style="max-width:560px;margin:0 auto;background:#ffffff;border-radius:12px;overflow:hidden;box-shadow:0 1px 3px rgba(0,0,0,0.08);">' +
-        // Header
-        '<div style="background:linear-gradient(135deg,#0f172a 0%,#1e293b 100%);padding:28px 32px;text-align:center;">' +
-          '<div style="font-size:26px;font-weight:700;color:#ffffff;letter-spacing:-0.5px;">Vidhai<span style="color:#2dd4bf;">.</span></div>' +
-          '<div style="font-size:12px;color:#94a3b8;margin-top:4px;letter-spacing:1px;text-transform:uppercase;">AI Takes Root</div>' +
-          '<div style="font-size:13px;color:#cbd5e1;margin-top:10px;">Weekly Digest &mdash; ' + dateStr + '</div>' +
+      '<body style="margin:0;padding:0;background:#ffffff;font-family:-apple-system,BlinkMacSystemFont,\'Segoe UI\',Roboto,sans-serif;color:#18181b;-webkit-text-size-adjust:100%;">' +
+      '<div style="width:100%;background:#ffffff;padding:32px 0;">' +
+      '<div style="max-width:600px;margin:0 auto;background:#ffffff;">' +
+        // Header — clean, light, minimal
+        '<div style="padding:32px 32px 16px 32px;text-align:center;">' +
+          '<div style="font-size:32px;font-weight:300;color:#9ca3af;letter-spacing:-0.5px;">Vidhai Weekly Digest</div>' +
+          '<div style="font-size:14px;color:#9ca3af;margin-top:8px;">' + dateStr + '</div>' +
         '</div>' +
         personalNoteHTML +
         aiHTML +
         semiHTML +
         investHTML +
-        ipoHTML +
-        blogHTML +
         videoHTML +
-        // CTA
-        '<div style="text-align:center;padding:24px 32px;background:#f8fafc;">' +
-          '<a href="' + siteUrl + '" style="display:inline-block;background:#0d9488;color:#ffffff;font-size:13px;font-weight:600;padding:10px 28px;border-radius:8px;text-decoration:none;">Explore Vidhai &rarr;</a>' +
-        '</div>' +
-        // Footer
-        '<div style="padding:20px 32px;text-align:center;background:#fafafa;border-top:1px solid #e4e4e7;">' +
+        blogHTML +
+        ipoHTML +
+        // Footer — simple
+        '<div style="padding:28px 32px;text-align:center;border-top:1px solid #e4e4e7;margin-top:20px;">' +
           '<div style="margin-bottom:10px;">' +
-            '<a href="https://www.linkedin.com/in/gowthamanrajusujatha/" style="display:inline-block;margin:0 6px;font-size:11px;color:#71717a;text-decoration:none;">Gowtham on LinkedIn</a> &bull; ' +
-            '<a href="https://linkedin.com/company/vidh-ai" style="display:inline-block;margin:0 6px;font-size:11px;color:#71717a;text-decoration:none;">Vidhai Company Page</a>' +
+            '<a href="' + siteUrl + '" style="font-size:13px;font-weight:600;color:#18181b;text-decoration:none;">' + siteUrl.replace('https://www.','') + '</a>' +
+            ' &mdash; Where AI Meets Industry' +
           '</div>' +
           '<p style="font-size:11px;color:#a1a1aa;line-height:1.5;margin:0;">' +
-            'You subscribed at <a href="' + siteUrl + '" style="color:#71717a;">vidhai.co</a>.<br>' +
+            'You received this because you subscribed to Vidhai updates.<br>' +
             '<a href="' + unsubUrl + '" style="color:#71717a;text-decoration:underline;">Unsubscribe</a>' +
           '</p>' +
-          '<p style="font-size:11px;color:#a1a1aa;margin:6px 0 0 0;">&copy; 2026 Vidhai. All rights reserved.</p>' +
         '</div>' +
       '</div></div></body></html>';
   }
@@ -1879,11 +1885,21 @@
           }).slice(0, 3);
           if (items.length > 0) {
             nlSections.invest = items.map(function(item) {
+              // Format change_percent: add sign and % if it's a number
+              var cp = item.change_percent;
+              var changeStr = '';
+              if (typeof cp === 'number') {
+                changeStr = (cp >= 0 ? '+' : '') + cp.toFixed(2) + '%';
+              } else if (cp) {
+                changeStr = String(cp);
+                if (changeStr.indexOf('%') < 0) changeStr += '%';
+                if (changeStr.charAt(0) !== '-' && changeStr.charAt(0) !== '+') changeStr = '+' + changeStr;
+              }
               return {
                 ticker: item.ticker || '',
                 title: item.company_name || item.name || '',
                 price: item.price ? ('$' + item.price) : '',
-                change: item.change_percent || '',
+                change: changeStr,
                 context: item.category || ''
               };
             });
@@ -1913,17 +1929,21 @@
         })
         .catch(function() { checkDone(); });
 
-      // Fetch Blog Posts (latest 3)
+      // Fetch Blog Posts (latest 3 by created_at)
       fetch('/api/content?table=posts')
         .then(function(r) { return r.json(); })
         .then(function(data) {
-          var items = (data || []).filter(function(p) { return p.status === 'published'; }).slice(0, 3);
+          var items = (data || []).sort(function(a, b) {
+            return new Date(b.created_at || 0) - new Date(a.created_at || 0);
+          }).slice(0, 3);
           if (items.length > 0) {
             nlSections.blog = items.map(function(item) {
+              // Generate slug from title (lowercase, replace spaces with hyphens, remove special chars)
+              var titleSlug = (item.title || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
               return {
                 title: item.title || '',
                 summary: item.excerpt || '',
-                url: 'https://www.vidhai.co/blog.html#post-' + item.slug
+                url: 'https://www.vidhai.co/blog.html#post-' + titleSlug
               };
             });
             renderNLSection('blog');

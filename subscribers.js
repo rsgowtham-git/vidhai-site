@@ -1,10 +1,13 @@
 // ============================================
 // VIDHAI — Subscribers API (Vercel Serverless)
-// Handles: subscribe, unsubscribe, list subscribers
+// Handles: subscribe (double opt-in), unsubscribe, list subscribers
 // ============================================
+
+const crypto = require('crypto');
 
 const SUPABASE_URL = process.env.SUPABASE_URL;
 const SUPABASE_KEY = process.env.SUPABASE_KEY;
+const RESEND_API_KEY = process.env.RESEND_API_KEY;
 
 async function supabaseFetch(path, options = {}) {
   const url = `${SUPABASE_URL}/rest/v1/${path}`;
@@ -30,7 +33,7 @@ async function supabaseFetch(path, options = {}) {
 const DISPOSABLE_DOMAINS = new Set([
   'mailinator.com','guerrillamail.com','guerrillamailblock.com','tempmail.com','throwaway.email',
   'temp-mail.org','10minutemail.com','trashmail.com','yopmail.com','sharklasers.com',
-  'grr.la','guerrillamail.info','guerrillamail.de','guerrillamail.net','disposableemailaddresses.emailmiser.com',
+  'grr.la','guerrillamail.info','guerrillamail.de','guerrillamail.net',
   'maildrop.cc','dispostable.com','mailnesia.com','tempr.email','discard.email',
   'fake.com','fakeinbox.com','mailcatch.com','tempail.com','tempmailaddress.com',
   'emailondeck.com','33mail.com','getnada.com','mohmal.com','burnermail.io',
@@ -38,41 +41,21 @@ const DISPOSABLE_DOMAINS = new Set([
   'mytemp.email','tempinbox.com','binkmail.com','spamdecoy.net','trashmail.net',
   'mailforspam.com','safetymail.info','filzmail.com','spamgourmet.com','incognitomail.com',
   'mailnull.com','spamfree24.org','jetable.org','trash-mail.com','guerrillamail.org',
-  'spam4.me','grr.la','cuvox.de','armyspy.com','dayrep.com','einrot.com',
+  'spam4.me','cuvox.de','armyspy.com','dayrep.com','einrot.com',
   'fleckens.hu','gustr.com','jourrapide.com','rhyta.com','superrito.com','teleworm.us'
 ]);
 
 function isValidEmail(email) {
-  // RFC 5322 simplified: local@domain.tld
   const re = /^[a-zA-Z0-9.!#$%&'*+/=?^_`{|}~-]+@[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?(?:\.[a-zA-Z0-9](?:[a-zA-Z0-9-]{0,61}[a-zA-Z0-9])?)*\.[a-zA-Z]{2,}$/;
   if (!re.test(email)) return false;
-  // Must have at least one dot in domain
   const domain = email.split('@')[1];
   if (!domain || !domain.includes('.')) return false;
-  // Block disposable domains
   if (DISPOSABLE_DOMAINS.has(domain.toLowerCase())) return false;
   return true;
 }
 
-async function checkMXRecord(domain) {
-  // Use DNS-over-HTTPS to verify domain has MX records (real mail server)
-  try {
-    const resp = await fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=MX', {
-      headers: { 'Accept': 'application/json' }
-    });
-    if (!resp.ok) return true; // If DNS lookup fails, give benefit of the doubt
-    const data = await resp.json();
-    // Status 0 = NOERROR (domain exists). Check for MX answers or at least no NXDOMAIN
-    if (data.Status === 3) return false; // NXDOMAIN — domain doesn't exist
-    if (data.Answer && data.Answer.length > 0) return true; // Has MX records
-    // No MX but domain exists — check for A record as fallback
-    const aResp = await fetch('https://dns.google/resolve?name=' + encodeURIComponent(domain) + '&type=A');
-    if (!aResp.ok) return true;
-    const aData = await aResp.json();
-    return aData.Status !== 3 && aData.Answer && aData.Answer.length > 0;
-  } catch {
-    return true; // On error, allow through
-  }
+function generateToken() {
+  return crypto.randomUUID();
 }
 
 module.exports = async function handler(req, res) {
@@ -83,14 +66,13 @@ module.exports = async function handler(req, res) {
   if (req.method === 'OPTIONS') return res.status(200).end();
 
   try {
-    // ---- POST: Subscribe ----
+    // ---- POST: Subscribe (double opt-in) ----
     if (req.method === 'POST') {
       const { email, frequency, _hp, _ts } = req.body || {};
 
       // Anti-bot: honeypot field must be empty
       if (_hp) {
-        // Silently reject — return fake success to confuse bots
-        return res.status(200).json({ success: true, message: 'Subscribed successfully!' });
+        return res.status(200).json({ success: true, message: 'Check your inbox to confirm your subscription.' });
       }
 
       // Anti-bot: timing check — form must be open at least 3 seconds
@@ -105,21 +87,10 @@ module.exports = async function handler(req, res) {
         return res.status(400).json({ error: 'Please enter a valid email address.' });
       }
 
-      // Additional local-part screening
-      const localPart = email.trim().split('@')[0].toLowerCase();
-      // Block obviously fake patterns: all same char, random gibberish (no vowels in 6+ chars)
-      if (/^(.)\1{4,}$/.test(localPart)) {
-        return res.status(400).json({ error: 'Please enter a valid email address.' });
-      }
+      const cleanEmail = email.toLowerCase().trim();
+      const freq = (frequency === 'monthly') ? 'monthly' : 'weekly';
 
-      // Verify domain has MX records (catches non-existent domains)
-      const domain = email.trim().split('@')[1];
-      const hasMX = await checkMXRecord(domain);
-      if (!hasMX) {
-        return res.status(400).json({ error: 'This email domain does not appear to accept mail. Please use a valid email.' });
-      }
-
-      // Rate limiting: check if same IP subscribed recently (within last 10 minutes)
+      // Rate limiting: check if same IP subscribed recently (within last 5 minutes)
       const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || null;
       if (clientIP) {
         const recentFromIP = await supabaseFetch(
@@ -127,105 +98,94 @@ module.exports = async function handler(req, res) {
         );
         if (recentFromIP.data && recentFromIP.data.length > 0) {
           const lastSub = new Date(recentFromIP.data[0].subscribed_at);
-          if (Date.now() - lastSub.getTime() < 10 * 60 * 1000) {
+          if (Date.now() - lastSub.getTime() < 5 * 60 * 1000) {
             return res.status(429).json({ error: 'Too many subscribe attempts. Please wait a few minutes and try again.' });
           }
         }
       }
 
-      const freq = (frequency === 'monthly') ? 'monthly' : 'weekly';
-
       // Check if already exists
-      const existing = await supabaseFetch(`subscribers?email=eq.${encodeURIComponent(email)}&select=id,status`);
-      
+      const existing = await supabaseFetch(`subscribers?email=eq.${encodeURIComponent(cleanEmail)}&select=id,status,verification_token`);
+
       if (existing.data && existing.data.length > 0) {
         const sub = existing.data[0];
         if (sub.status === 'active') {
-          return res.status(200).json({ success: true, message: 'Already subscribed!' });
+          return res.status(200).json({ success: true, message: 'You are already subscribed.' });
         }
-        // Re-subscribe
-        const update = await supabaseFetch(`subscribers?id=eq.${sub.id}`, {
+        if (sub.status === 'pending') {
+          // Resend confirmation email with new token
+          const token = generateToken();
+          const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+          await supabaseFetch(`subscribers?id=eq.${sub.id}`, {
+            method: 'PATCH',
+            body: JSON.stringify({
+              verification_token: token,
+              token_expires_at: expiresAt,
+              frequency: freq
+            })
+          });
+          await sendConfirmationEmail(cleanEmail, token);
+          return res.status(200).json({ success: true, message: 'We sent another confirmation email. Please check your inbox (and spam folder).' });
+        }
+        // Was unsubscribed — start fresh with double opt-in
+        const token = generateToken();
+        const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+        await supabaseFetch(`subscribers?id=eq.${sub.id}`, {
           method: 'PATCH',
-          body: JSON.stringify({ status: 'active', frequency: freq, unsubscribed_at: null })
+          body: JSON.stringify({
+            status: 'pending',
+            verification_token: token,
+            token_expires_at: expiresAt,
+            frequency: freq,
+            unsubscribed_at: null
+          })
         });
-        return res.status(200).json({ success: true, message: 'Welcome back! Re-subscribed successfully.' });
+        await sendConfirmationEmail(cleanEmail, token);
+        return res.status(200).json({ success: true, message: 'Please check your inbox and click the confirmation link to resubscribe.' });
       }
 
-      // New subscriber
+      // New subscriber — insert as 'pending'
+      const token = generateToken();
+      const expiresAt = new Date(Date.now() + 24 * 60 * 60 * 1000).toISOString();
+
       const insert = await supabaseFetch('subscribers', {
         method: 'POST',
         body: JSON.stringify({
-          email: email.toLowerCase().trim(),
+          email: cleanEmail,
           frequency: freq,
-          status: 'active',
-          ip_address: req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || null,
+          status: 'pending',
+          verification_token: token,
+          token_expires_at: expiresAt,
+          ip_address: clientIP,
           user_agent: req.headers['user-agent'] || null
         })
       });
 
       if (insert.status >= 400) {
+        console.error('Insert failed:', insert.data);
         return res.status(500).json({ error: 'Failed to subscribe. Please try again.' });
       }
 
-      // Send welcome email via Resend (if configured)
-      const RESEND_API_KEY = process.env.RESEND_API_KEY;
-      if (RESEND_API_KEY) {
-        try {
-          await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${RESEND_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              from: 'Vidhai <newsletter@vidhai.co>',
-              to: [email.toLowerCase().trim()],
-              subject: 'Welcome to Vidhai — AI Takes Root 🌱',
-              html: getWelcomeEmailHTML(email)
-            })
-          });
-        } catch (emailErr) {
-          console.error('Welcome email failed:', emailErr);
-          // Don't fail the subscription if email fails
-        }
-      }
+      // Send confirmation email
+      await sendConfirmationEmail(cleanEmail, token);
 
-      // Notify admin via Resend
-      if (RESEND_API_KEY) {
-        try {
-          await fetch('https://api.resend.com/emails', {
-            method: 'POST',
-            headers: {
-              'Authorization': `Bearer ${RESEND_API_KEY}`,
-              'Content-Type': 'application/json'
-            },
-            body: JSON.stringify({
-              from: 'Vidhai <newsletter@vidhai.co>',
-              to: ['rsgowtham@gmail.com'],
-              subject: `🔔 New Vidhai Subscriber: ${email}`,
-              html: `<p>New subscriber: <strong>${email}</strong></p><p>Frequency: ${freq}</p><p>Time: ${new Date().toISOString()}</p>`
-            })
-          });
-        } catch (notifyErr) {
-          console.error('Admin notification failed:', notifyErr);
-        }
-      }
-
-      return res.status(200).json({ success: true, message: 'Subscribed successfully!' });
+      return res.status(200).json({
+        success: true,
+        message: 'Almost there! Please check your inbox and click the confirmation link to complete your subscription.'
+      });
     }
 
-    // ---- GET: List subscribers (admin) or handle unsubscribe page ----
+    // ---- GET: List subscribers (admin) or handle unsubscribe ----
     if (req.method === 'GET') {
-      const { action, email, token } = req.query || {};
+      const { action, email } = req.query || {};
 
       // Unsubscribe via link
       if (action === 'unsubscribe' && email) {
-        const update = await supabaseFetch(`subscribers?email=eq.${encodeURIComponent(email.toLowerCase().trim())}`, {
+        await supabaseFetch(`subscribers?email=eq.${encodeURIComponent(email.toLowerCase().trim())}`, {
           method: 'PATCH',
-          body: JSON.stringify({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString() })
+          body: JSON.stringify({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString(), verification_token: null })
         });
 
-        // Return a simple HTML page confirming unsubscribe
         res.setHeader('Content-Type', 'text/html');
         return res.status(200).send(`
           <!DOCTYPE html>
@@ -237,7 +197,7 @@ module.exports = async function handler(req, res) {
           <body><div class="card">
           <h1>Unsubscribed</h1>
           <p>You have been unsubscribed from the Vidhai newsletter. We're sorry to see you go.</p>
-          <p style="margin-top:1.5rem"><a href="https://vidhai.co">← Back to Vidhai</a></p>
+          <p style="margin-top:1.5rem"><a href="https://vidhai.co">&larr; Back to Vidhai</a></p>
           </div></body></html>
         `);
       }
@@ -251,13 +211,12 @@ module.exports = async function handler(req, res) {
     if (req.method === 'DELETE') {
       const { id } = req.query || {};
       if (!id) return res.status(400).json({ error: 'Subscriber ID required.' });
-      
+
       const result = await supabaseFetch(`subscribers?id=eq.${id}`, {
         method: 'PATCH',
-        body: JSON.stringify({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString() })
+        body: JSON.stringify({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString(), verification_token: null })
       });
 
-      // Verify the update actually happened
       if (!result.data || (Array.isArray(result.data) && result.data.length === 0)) {
         return res.status(404).json({ success: false, error: 'Subscriber not found or already removed.' });
       }
@@ -273,41 +232,58 @@ module.exports = async function handler(req, res) {
   }
 };
 
-function getWelcomeEmailHTML(email) {
-  const unsubUrl = `https://vidhai.co/api/subscribers?action=unsubscribe&email=${encodeURIComponent(email)}`;
-  return `
-<!DOCTYPE html>
+// Send the confirmation email with a verify link
+async function sendConfirmationEmail(email, token) {
+  if (!RESEND_API_KEY) return;
+
+  const confirmUrl = `https://vidhai.co/api/confirm-subscription?token=${encodeURIComponent(token)}`;
+
+  try {
+    await fetch('https://api.resend.com/emails', {
+      method: 'POST',
+      headers: {
+        'Authorization': `Bearer ${RESEND_API_KEY}`,
+        'Content-Type': 'application/json'
+      },
+      body: JSON.stringify({
+        from: 'Vidhai <newsletter@vidhai.co>',
+        to: [email],
+        subject: 'Confirm your Vidhai subscription',
+        html: getConfirmationEmailHTML(email, confirmUrl)
+      })
+    });
+  } catch (err) {
+    console.error('Confirmation email failed:', err);
+  }
+}
+
+function getConfirmationEmailHTML(email, confirmUrl) {
+  return `<!DOCTYPE html>
 <html>
 <head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"></head>
 <body style="margin:0;padding:0;background:#f8f9ff;font-family:-apple-system,BlinkMacSystemFont,'Segoe UI',Roboto,sans-serif;">
 <div style="max-width:560px;margin:0 auto;padding:40px 20px;">
   <div style="background:#ffffff;border-radius:12px;padding:40px 32px;border:1px solid #e2e8f0;">
     <div style="text-align:center;margin-bottom:32px;">
-      <h1 style="font-size:24px;color:#0f172a;margin:0 0 8px 0;">Welcome to Vidhai 🌱</h1>
-      <p style="color:#64748b;font-size:14px;margin:0;">AI Takes Root</p>
+      <h1 style="font-size:24px;color:#0f172a;margin:0 0 8px 0;">Confirm Your Subscription</h1>
+      <p style="color:#64748b;font-size:14px;margin:0;">Vidhai — AI Takes Root</p>
     </div>
     <p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 16px 0;">
-      Thank you for subscribing to the Vidhai newsletter. You will receive curated AI and semiconductor industry insights directly in your inbox.
+      Thanks for signing up for the Vidhai newsletter. Please confirm your email address by clicking the button below.
     </p>
-    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 16px 0;">
-      Here is what you can expect:
+    <div style="text-align:center;margin:28px 0;">
+      <a href="${confirmUrl}" style="display:inline-block;background:#0d9488;color:#ffffff;font-size:15px;font-weight:600;padding:14px 36px;border-radius:8px;text-decoration:none;">Confirm Subscription</a>
+    </div>
+    <p style="color:#64748b;font-size:13px;line-height:1.6;margin:0 0 8px 0;">
+      This link will expire in 24 hours. If you did not sign up for Vidhai, you can safely ignore this email.
     </p>
-    <ul style="color:#334155;font-size:15px;line-height:1.9;margin:0 0 24px 0;padding-left:20px;">
-      <li>Latest AI news and model releases</li>
-      <li>Semiconductor industry updates</li>
-      <li>Curated video recommendations</li>
-      <li>Original analysis and insights</li>
-    </ul>
-    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0 0 24px 0;">
-      In the meantime, visit <a href="https://vidhai.co" style="color:#0ea5e9;text-decoration:none;font-weight:500;">vidhai.co</a> to explore the latest articles.
-    </p>
-    <p style="color:#334155;font-size:15px;line-height:1.7;margin:0;">
-      — Team Vidhai
+    <p style="color:#94a3b8;font-size:12px;line-height:1.5;margin:16px 0 0 0;border-top:1px solid #f1f5f9;padding-top:12px;">
+      If the button does not work, copy and paste this URL into your browser:<br>
+      <span style="color:#64748b;word-break:break-all;">${confirmUrl}</span>
     </p>
   </div>
   <div style="text-align:center;margin-top:24px;">
     <p style="color:#94a3b8;font-size:12px;margin:0;">
-      <a href="${unsubUrl}" style="color:#94a3b8;text-decoration:underline;">Unsubscribe</a> · 
       <a href="https://vidhai.co" style="color:#94a3b8;text-decoration:underline;">vidhai.co</a>
     </p>
   </div>
