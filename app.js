@@ -1382,9 +1382,11 @@
   function renderSubscriberList() {
     var statsEl = document.getElementById('subscriber-stats');
     var listEl = document.getElementById('admin-subscriber-list');
+    var unsubListEl = document.getElementById('admin-subscriber-list-unsub');
     if (!listEl) return;
 
     listEl.innerHTML = '<p class="admin-empty">Loading subscribers...</p>';
+    if (unsubListEl) unsubListEl.innerHTML = '';
 
     fetch('/api/subscribers')
       .then(function(r) { return r.json(); })
@@ -1394,73 +1396,105 @@
           return;
         }
 
+        var activePending = data.filter(function(s) { return s.status === 'active' || s.status === 'pending'; });
+        var unsubscribed = data.filter(function(s) { return s.status === 'unsubscribed'; });
         var activeCount = data.filter(function(s) { return s.status === 'active'; }).length;
         var pendingCount = data.filter(function(s) { return s.status === 'pending'; }).length;
-        var unsubCount = data.filter(function(s) { return s.status === 'unsubscribed'; }).length;
 
         if (statsEl) {
           statsEl.innerHTML =
             '<div class="stat"><span class="stat-number">' + data.length + '</span> total</div>' +
             '<div class="stat"><span class="stat-number active">' + activeCount + '</span> active</div>' +
             (pendingCount > 0 ? '<div class="stat"><span class="stat-number" style="color:#f59e0b;">' + pendingCount + '</span> pending</div>' : '') +
-            '<div class="stat"><span class="stat-number unsub">' + unsubCount + '</span> unsubscribed</div>';
+            '<div class="stat"><span class="stat-number unsub">' + unsubscribed.length + '</span> unsubscribed</div>';
         }
 
-        if (data.length === 0) {
-          listEl.innerHTML = '<p class="admin-empty">No subscribers yet.</p>';
-          return;
+        // Render active & pending list
+        if (activePending.length === 0) {
+          listEl.innerHTML = '<p class="admin-empty">No active or pending subscribers yet.</p>';
+        } else {
+          listEl.innerHTML = renderSubItems(activePending);
+          bindRemoveButtons(listEl);
         }
 
-        listEl.innerHTML = data.map(function(sub) {
-          var dateStr = '';
-          try {
-            dateStr = new Date(sub.subscribed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
-          } catch(e) { /* ignore */ }
-
-          var badgeClass = sub.status === 'active' ? 'active' : (sub.status === 'pending' ? 'pending' : 'unsubscribed');
-
-          return '<div class="admin-subscriber-item">' +
-            '<span class="admin-subscriber-item__email">' + escapeHTML(sub.email) + '</span>' +
-            '<div class="admin-subscriber-item__meta">' +
-              '<span>' + escapeHTML(sub.frequency || 'weekly') + '</span>' +
-              '<span>' + dateStr + '</span>' +
-              '<span class="admin-subscriber-item__badge ' + badgeClass + '">' + escapeHTML(sub.status) + '</span>' +
-              '<button type="button" class="admin-subscriber-remove" data-sub-id="' + sub.id + '" data-sub-email="' + escapeHTML(sub.email) + '" title="Remove subscriber">&times;</button>' +
-            '</div>' +
-          '</div>';
-        }).join('');
-
-        // Bind remove buttons
-        listEl.querySelectorAll('.admin-subscriber-remove').forEach(function(btn) {
-          btn.addEventListener('click', function() {
-            var subId = btn.getAttribute('data-sub-id');
-            var subEmail = btn.getAttribute('data-sub-email');
-            if (!confirm('Unsubscribe "' + subEmail + '"? They will be marked as unsubscribed.')) return;
-            btn.disabled = true;
-            btn.textContent = '...';
-            fetch('/api/subscribers?id=' + encodeURIComponent(subId), { method: 'DELETE' })
-              .then(function(r) { return r.json(); })
-              .then(function(data) {
-                if (data.success) {
-                  renderSubscriberList(); // Refresh the list
-                } else {
-                  alert('Failed to unsubscribe: ' + (data.error || 'Unknown error'));
-                  btn.disabled = false;
-                  btn.textContent = '\u00d7';
-                }
-              })
-              .catch(function() {
-                alert('Network error. Please try again.');
-                btn.disabled = false;
-                btn.textContent = '\u00d7';
-              });
-          });
-        });
+        // Render unsubscribed list
+        if (unsubListEl) {
+          if (unsubscribed.length === 0) {
+            unsubListEl.innerHTML = '<p class="admin-empty">No unsubscribed users.</p>';
+          } else {
+            unsubListEl.innerHTML = renderSubItems(unsubscribed);
+          }
+        }
       })
       .catch(function() {
         listEl.innerHTML = '<p class="admin-empty">Failed to load subscribers. Is the API connected?</p>';
       });
   }
+
+  function renderSubItems(subs) {
+    return subs.map(function(sub) {
+      var dateStr = '';
+      try {
+        dateStr = new Date(sub.subscribed_at).toLocaleDateString('en-US', { month: 'short', day: 'numeric', year: 'numeric' });
+      } catch(e) { /* ignore */ }
+      var badgeClass = sub.status === 'active' ? 'active' : (sub.status === 'pending' ? 'pending' : 'unsubscribed');
+      return '<div class="admin-subscriber-item">' +
+        '<span class="admin-subscriber-item__email">' + escapeHTML(sub.email) + '</span>' +
+        '<div class="admin-subscriber-item__meta">' +
+          '<span>' + escapeHTML(sub.frequency || 'weekly') + '</span>' +
+          '<span>' + dateStr + '</span>' +
+          '<span class="admin-subscriber-item__badge ' + badgeClass + '">' + escapeHTML(sub.status) + '</span>' +
+          (sub.status !== 'unsubscribed' ? '<button type="button" class="admin-subscriber-remove" data-sub-id="' + sub.id + '" data-sub-email="' + escapeHTML(sub.email) + '" title="Remove subscriber">&times;</button>' : '') +
+        '</div>' +
+      '</div>';
+    }).join('');
+  }
+
+  function bindRemoveButtons(container) {
+    container.querySelectorAll('.admin-subscriber-remove').forEach(function(btn) {
+      btn.addEventListener('click', function() {
+        var subId = btn.getAttribute('data-sub-id');
+        var subEmail = btn.getAttribute('data-sub-email');
+        if (!confirm('Unsubscribe "' + subEmail + '"? They will be marked as unsubscribed.')) return;
+        btn.disabled = true;
+        btn.textContent = '...';
+        fetch('/api/subscribers?id=' + encodeURIComponent(subId), { method: 'DELETE' })
+          .then(function(r) { return r.json(); })
+          .then(function(res) {
+            if (res.success) {
+              renderSubscriberList();
+            } else {
+              alert('Failed to unsubscribe: ' + (res.error || 'Unknown error'));
+              btn.disabled = false;
+              btn.textContent = '\u00d7';
+            }
+          })
+          .catch(function() {
+            alert('Network error. Please try again.');
+            btn.disabled = false;
+            btn.textContent = '\u00d7';
+          });
+      });
+    });
+  }
+
+  // Subscriber sub-tab switching
+  document.querySelectorAll('.subscriber-sub-tab').forEach(function(tab) {
+    tab.addEventListener('click', function() {
+      document.querySelectorAll('.subscriber-sub-tab').forEach(function(t) { t.classList.remove('active'); });
+      tab.classList.add('active');
+      var target = tab.getAttribute('data-sub-tab');
+      var apList = document.getElementById('admin-subscriber-list');
+      var unList = document.getElementById('admin-subscriber-list-unsub');
+      if (target === 'active-pending') {
+        if (apList) apList.style.display = '';
+        if (unList) unList.style.display = 'none';
+      } else {
+        if (apList) apList.style.display = 'none';
+        if (unList) unList.style.display = '';
+      }
+    });
+  });
 
   // ========================================
   // NEWSLETTER COMPOSE & SEND (Multi-Section)
@@ -1605,6 +1639,8 @@
     syncNLAllFields();
     var subject = (document.getElementById('nl-subject') || {}).value || 'Vidhai Weekly Digest';
     var personalNote = (document.getElementById('nl-personal-note') || {}).value || '';
+    var nlFormat = (document.getElementById('nl-format') || {}).value || 'weekly';
+    var isMonthly = nlFormat === 'monthly';
 
     var today = new Date();
     var months = ['January','February','March','April','May','June','July','August','September','October','November','December'];
@@ -1625,7 +1661,7 @@
       return 'background:#f1f5f9;color:#475569;';
     }
 
-    // --- Build headline-only sections (link to site for details) ---
+    // --- Build sections (headline-only for weekly, detailed for monthly) ---
     var siteUrl = 'https://www.vidhai.co';
 
     // Helper: bullet-style headline link
@@ -1655,11 +1691,21 @@
       return '<a href="' + href + '" style="display:inline-block;margin-top:10px;font-size:12px;font-weight:500;color:#6b7280;text-decoration:none;">' + text + ' &rarr;</a>';
     }
 
-    // AI news headlines
+    // Detailed item helper for monthly format
+    function detailedItem(title, url, summary, badge) {
+      var badgeHTML = badge ? '<span style="display:inline-block;font-size:9px;font-weight:700;letter-spacing:0.5px;text-transform:uppercase;padding:2px 6px;border-radius:3px;margin-right:6px;' + badgeStyle(badge) + '">' + escapeHTML(badge) + '</span>' : '';
+      var link = url ? '<a href="' + escapeHTML(url) + '" style="color:#18181b;text-decoration:none;font-size:14px;font-weight:600;line-height:1.4;">' + escapeHTML(title) + '</a>' : '<span style="font-size:14px;font-weight:600;color:#18181b;">' + escapeHTML(title) + '</span>';
+      var summaryHTML = summary ? '<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:4px;">' + escapeHTML(summary) + '</div>' : '';
+      return '<div style="padding:10px 0;border-bottom:1px solid #f4f4f5;">' + badgeHTML + link + summaryHTML + '</div>';
+    }
+
+    // AI news
     var aiHTML = '';
     var aiStories = (nlSections.ai || []).filter(function(s) { return s.title; });
     if (aiStories.length > 0) {
-      var aiItems = aiStories.map(function(s) { return headlineLink(s.title, s.url, s.badge); }).join('');
+      var aiItems = aiStories.map(function(s) {
+        return isMonthly ? detailedItem(s.title, s.url, s.summary, s.badge) : headlineLink(s.title, s.url, s.badge);
+      }).join('');
       aiHTML = '<div style="padding:20px 32px;">' +
         sectionHeader('AI NEWS') +
         aiItems +
@@ -1667,11 +1713,13 @@
       '</div>';
     }
 
-    // Semiconductor headlines
+    // Semiconductor
     var semiHTML = '';
     var semiStories = (nlSections.semi || []).filter(function(s) { return s.title; });
     if (semiStories.length > 0) {
-      var semiItems = semiStories.map(function(s) { return headlineLink(s.title, s.url, s.badge); }).join('');
+      var semiItems = semiStories.map(function(s) {
+        return isMonthly ? detailedItem(s.title, s.url, s.summary, s.badge) : headlineLink(s.title, s.url, s.badge);
+      }).join('');
       semiHTML = '<div style="padding:20px 32px;">' +
         sectionHeader('SEMICONDUCTOR INSIGHTS') +
         semiItems +
@@ -1701,21 +1749,23 @@
       '</div>';
     }
 
-    // Blog headlines
+    // Blog posts — always included
     var blogHTML = '';
     var blogPosts = (nlSections.blog || []).filter(function(s) { return s.title; });
     if (blogPosts.length > 0) {
       var blogItems = blogPosts.map(function(s) {
         var link = s.url ? '<a href="' + escapeHTML(s.url) + '" style="color:#0f172a;text-decoration:none;font-size:14px;font-weight:600;">' + escapeHTML(s.title) + '</a>' : '<span style="font-size:14px;font-weight:600;color:#0f172a;">' + escapeHTML(s.title) + '</span>';
-        return '<div style="padding:8px 0;border-bottom:1px solid #f4f4f5;">' + link + '</div>';
+        var summaryHTML = (isMonthly && s.summary) ? '<div style="font-size:13px;color:#64748b;line-height:1.5;margin-top:4px;">' + escapeHTML(s.summary) + '</div>' : '';
+        return '<div style="padding:8px 0;border-bottom:1px solid #f4f4f5;">' + link + summaryHTML + '</div>';
       }).join('');
       blogHTML = '<div style="padding:20px 32px;">' +
         sectionHeader('FROM THE BLOG') +
         blogItems +
+        sectionLink('Read all posts', siteUrl + '/blog.html') +
       '</div>';
     }
 
-    // Video headlines
+    // Curated Videos
     var videoHTML = '';
     var videos = (nlSections.video || []).filter(function(s) { return s.title; });
     if (videos.length > 0) {
@@ -1757,7 +1807,7 @@
       '<div style="max-width:600px;margin:0 auto;background:#ffffff;">' +
         // Header — clean, light, minimal
         '<div style="padding:32px 32px 16px 32px;text-align:center;">' +
-          '<div style="font-size:32px;font-weight:300;color:#9ca3af;letter-spacing:-0.5px;">Vidhai Weekly Digest</div>' +
+          '<div style="font-size:32px;font-weight:300;color:#9ca3af;letter-spacing:-0.5px;">' + (isMonthly ? 'Vidhai Monthly Digest' : 'Vidhai Weekly Digest') + '</div>' +
           '<div style="font-size:14px;color:#9ca3af;margin-top:8px;">' + dateStr + '</div>' +
         '</div>' +
         personalNoteHTML +
@@ -1814,10 +1864,11 @@
       var today = new Date();
       var dateStr = months[today.getMonth()] + ' ' + today.getDate() + ', ' + today.getFullYear();
 
-      // Set subject line
+      // Set subject line based on format
+      var nlFormatVal = (document.getElementById('nl-format') || {}).value || 'weekly';
       var subjectEl = document.getElementById('nl-subject');
       if (subjectEl && !subjectEl.value) {
-        subjectEl.value = 'Vidhai Weekly Digest \u2014 ' + dateStr;
+        subjectEl.value = (nlFormatVal === 'monthly' ? 'Vidhai Monthly Digest' : 'Vidhai Weekly Digest') + ' \u2014 ' + dateStr;
       }
 
       var pending = 6;
@@ -1938,12 +1989,10 @@
           }).slice(0, 3);
           if (items.length > 0) {
             nlSections.blog = items.map(function(item) {
-              // Generate slug from title (lowercase, replace spaces with hyphens, remove special chars)
-              var titleSlug = (item.title || '').toLowerCase().replace(/[^a-z0-9\s-]/g, '').replace(/\s+/g, '-').replace(/-+/g, '-').replace(/^-|-$/g, '');
               return {
                 title: item.title || '',
                 summary: item.excerpt || '',
-                url: 'https://www.vidhai.co/blog.html#post-' + titleSlug
+                url: 'https://www.vidhai.co/blog.html'
               };
             });
             renderNLSection('blog');
@@ -1982,7 +2031,17 @@
       alert('Please enter a subject line.');
       return null;
     }
+    var personalNote = (document.getElementById('nl-personal-note') || {}).value;
+    if (!personalNote || !personalNote.trim()) {
+      alert('Please add a personal note. It\u2019s required for reader engagement.');
+      return null;
+    }
     syncNLAllFields();
+    var hasBlog = (nlSections.blog || []).some(function(s) { return s.title; });
+    if (!hasBlog) {
+      alert('Blog posts are required. Click Auto-fill to load the latest 3 posts.');
+      return null;
+    }
     var hasContent = ['ai','semi','blog','video','invest','ipo'].some(function(sec) {
       return nlSections[sec].some(function(s) { return s.title; });
     });

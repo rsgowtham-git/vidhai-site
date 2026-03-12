@@ -3111,6 +3111,32 @@ a:hover {
   color: #f59e0b;
 }
 
+/* Subscriber sub-tabs */
+.subscriber-sub-tabs {
+  display: flex;
+  gap: 0;
+  margin-bottom: 16px;
+  border-bottom: 1px solid rgba(255,255,255,0.08);
+}
+.subscriber-sub-tab {
+  background: none;
+  border: none;
+  color: rgba(255,255,255,0.5);
+  font-size: 13px;
+  font-weight: 500;
+  padding: 10px 20px;
+  cursor: pointer;
+  border-bottom: 2px solid transparent;
+  transition: color 0.2s, border-color 0.2s;
+}
+.subscriber-sub-tab:hover {
+  color: rgba(255,255,255,0.8);
+}
+.subscriber-sub-tab.active {
+  color: #fff;
+  border-bottom-color: #06b6d4;
+}
+
 .admin-subscriber-remove {
   background: none;
   border: 1px solid rgba(248, 113, 113, 0.3);

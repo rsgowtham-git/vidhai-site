@@ -423,19 +423,31 @@
       <div class="admin-toolbar">
         <div class="admin-subscriber-stats" id="subscriber-stats"></div>
       </div>
-      <div id="admin-subscriber-list" class="admin-subscriber-list"></div>
+      <div class="subscriber-sub-tabs">
+        <button class="subscriber-sub-tab active" data-sub-tab="active-pending">Active & Pending</button>
+        <button class="subscriber-sub-tab" data-sub-tab="unsubscribed">Unsubscribed</button>
+      </div>
+      <div id="admin-subscriber-list" class="admin-subscriber-list" data-sub-tab-view="active-pending"></div>
+      <div id="admin-subscriber-list-unsub" class="admin-subscriber-list" data-sub-tab-view="unsubscribed" style="display:none"></div>
     </div>
 
     <!-- Newsletter Compose View -->
     <div data-admin-view="newsletter" style="display:none">
       <div class="newsletter-compose">
         <div class="admin-field">
+          <label for="nl-format">Newsletter Format</label>
+          <select id="nl-format" class="admin-input">
+            <option value="weekly">Weekly — Headlines only</option>
+            <option value="monthly">Monthly — Detailed with summaries</option>
+          </select>
+        </div>
+        <div class="admin-field">
           <label for="nl-subject">Subject Line</label>
           <input type="text" id="nl-subject" class="admin-input" placeholder="e.g. Vidhai Weekly Digest — March 7, 2026">
         </div>
         <div class="admin-field">
-          <label for="nl-personal-note">Personal Note (from Gowtham)</label>
-          <textarea id="nl-personal-note" class="admin-textarea" rows="4" placeholder="Happy Friday! Write a brief personal note about this week's highlights..."></textarea>
+          <label for="nl-personal-note">Personal Note (from Gowtham) <span style="color:#ef4444;">*</span></label>
+          <textarea id="nl-personal-note" class="admin-textarea" rows="4" placeholder="This week was all about... Write a brief intro summarizing the week's biggest theme."></textarea>
         </div>
         <div class="admin-field">
           <label>AI News (add up to 4)</label>
@@ -454,7 +466,7 @@
           </button>
         </div>
         <div class="admin-field">
-          <label>Blog Highlight (optional)</label>
+          <label>From the Blog (latest 3) <span style="color:#ef4444;">*</span></label>
           <div id="nl-blog-list" class="nl-stories-list"></div>
           <button type="button" class="admin-btn admin-btn--sm nl-add-story-btn" data-section="blog">
             <svg width="12" height="12" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.5" stroke-linecap="round"><line x1="12" y1="5" x2="12" y2="19"/><line x1="5" y1="12" x2="19" y2="12"/></svg>
