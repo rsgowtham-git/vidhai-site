@@ -326,6 +326,19 @@ a:hover {
   font-weight: 600;
 }
 
+/* Founder card — stack on mobile */
+@media (max-width: 640px) {
+  .about-founder {
+    flex-direction: column !important;
+    align-items: center !important;
+    text-align: center;
+  }
+  .about-founder img {
+    width: 120px !important;
+    height: 120px !important;
+  }
+}
+
 /* ========================================
    HERO SECTION
    ======================================== */
