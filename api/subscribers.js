@@ -85,8 +85,30 @@ module.exports = async function handler(req, res) {
   try {
     // ---- POST: Subscribe ----
     if (req.method === 'POST') {
-      const { email, frequency } = req.body || {};
+      const { email, frequency, _hp, _ts } = req.body || {};
+
+      // Anti-bot: honeypot field must be empty
+      if (_hp) {
+        // Silently reject — return fake success to confuse bots
+        return res.status(200).json({ success: true, message: 'Subscribed successfully!' });
+      }
+
+      // Anti-bot: timing check — form must be open at least 3 seconds
+      if (_ts) {
+        const elapsed = Date.now() - parseInt(_ts, 10);
+        if (!isNaN(elapsed) && elapsed < 3000) {
+          return res.status(400).json({ error: 'Please take a moment before submitting. Try again.' });
+        }
+      }
+
       if (!email || !isValidEmail(email.trim())) {
+        return res.status(400).json({ error: 'Please enter a valid email address.' });
+      }
+
+      // Additional local-part screening
+      const localPart = email.trim().split('@')[0].toLowerCase();
+      // Block obviously fake patterns: all same char, random gibberish (no vowels in 6+ chars)
+      if (/^(.)\1{4,}$/.test(localPart)) {
         return res.status(400).json({ error: 'Please enter a valid email address.' });
       }
 
@@ -95,6 +117,20 @@ module.exports = async function handler(req, res) {
       const hasMX = await checkMXRecord(domain);
       if (!hasMX) {
         return res.status(400).json({ error: 'This email domain does not appear to accept mail. Please use a valid email.' });
+      }
+
+      // Rate limiting: check if same IP subscribed recently (within last 10 minutes)
+      const clientIP = req.headers['x-forwarded-for'] || req.headers['x-real-ip'] || null;
+      if (clientIP) {
+        const recentFromIP = await supabaseFetch(
+          `subscribers?ip_address=eq.${encodeURIComponent(clientIP)}&order=subscribed_at.desc&limit=1&select=subscribed_at`
+        );
+        if (recentFromIP.data && recentFromIP.data.length > 0) {
+          const lastSub = new Date(recentFromIP.data[0].subscribed_at);
+          if (Date.now() - lastSub.getTime() < 10 * 60 * 1000) {
+            return res.status(429).json({ error: 'Too many subscribe attempts. Please wait a few minutes and try again.' });
+          }
+        }
       }
 
       const freq = (frequency === 'monthly') ? 'monthly' : 'weekly';
@@ -211,12 +247,21 @@ module.exports = async function handler(req, res) {
       return res.status(200).json(result.data || []);
     }
 
-    // ---- DELETE: Remove subscriber ----
+    // ---- DELETE: Remove subscriber (uses PATCH to 'unsubscribed' due to RLS) ----
     if (req.method === 'DELETE') {
       const { id } = req.query || {};
       if (!id) return res.status(400).json({ error: 'Subscriber ID required.' });
       
-      await supabaseFetch(`subscribers?id=eq.${id}`, { method: 'DELETE' });
+      const result = await supabaseFetch(`subscribers?id=eq.${id}`, {
+        method: 'PATCH',
+        body: JSON.stringify({ status: 'unsubscribed', unsubscribed_at: new Date().toISOString() })
+      });
+
+      // Verify the update actually happened
+      if (!result.data || (Array.isArray(result.data) && result.data.length === 0)) {
+        return res.status(404).json({ success: false, error: 'Subscriber not found or already removed.' });
+      }
+
       return res.status(200).json({ success: true });
     }
 
