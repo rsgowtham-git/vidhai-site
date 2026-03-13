@@ -2744,11 +2744,29 @@ a:hover {
 .footer__bottom {
   border-top: 1px solid var(--color-divider);
   padding-top: var(--space-4);
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  flex-wrap: wrap;
+  gap: var(--space-2);
 }
 
 .footer__copy {
   font-size: var(--text-xs);
   color: var(--color-text-faint);
+}
+
+.footer__pitch-link {
+  font-size: var(--text-xs);
+  color: var(--color-text-faint);
+  text-decoration: none;
+  opacity: 0.5;
+  transition: opacity 0.2s ease;
+}
+
+.footer__pitch-link:hover {
+  opacity: 0.85;
+  color: var(--color-text-muted);
 }
 
 /* ========================================
